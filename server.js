@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
 const axios = require('axios');
+const mongoose = require('mongoose');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,284 +11,138 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Banco de Dados Temporário (Em um cenário real, use MongoDB ou SQL)
-let users = []; 
-let leads = [];
-let activeAutomation = {
-    keyword: "QUERO",
-    flow: []
-};
-let userSettings = {
-    openaiKey: "",
-    fbAppId: "",
-    metaToken: "",
-    igBusinessId: "",
-    brandContext: "",
-    aiInstructions: ""
-};
+// 1. Conexão com Banco de Dados (MongoDB Atlas Grátis)
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('✅ MongoDB Online'))
+    .catch(err => console.error('❌ Erro de Conexão:', err));
 
-// 1. Rota de Verificação do Webhook (Necessária para configurar na Meta/Facebook)
+// 2. Modelos de Dados (Estrutura do SaaS)
+const User = mongoose.model('User', new mongoose.Schema({
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    lastLogin: String
+}));
+
+const Settings = mongoose.model('Settings', new mongoose.Schema({
+    userEmail: { type: String, required: true, unique: true },
+    openaiKey: String,
+    metaToken: String,
+    igBusinessId: String,
+    brandContext: String,
+    aiInstructions: String
+}));
+
+const Automation = mongoose.model('Automation', new mongoose.Schema({
+    userEmail: { type: String, required: true, unique: true },
+    keyword: { type: String, default: "QUERO" },
+    flow: Array,
+    active: { type: Boolean, default: true }
+}));
+
+const Lead = mongoose.model('Lead', new mongoose.Schema({
+    userEmail: String,
+    ig: String,
+    trigger: String,
+    aiResponse: String,
+    timestamp: { type: Date, default: Date.now }
+}));
+
+// 1. Webhook (Instagram)
 app.get('/webhook', (req, res) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
-
     if (mode === 'subscribe' && token === process.env.WEBHOOK_VERIFY_TOKEN) {
-        console.log('WEBHOOK_VALIDADO');
         res.status(200).send(challenge);
     } else {
         res.sendStatus(403);
     }
 });
 
-// 2. Rota que recebe os eventos do Instagram REAL (Mensagens e Comentários)
-app.post('/webhook', async (req, res) => {
-    const body = req.body;
-
-    if (body.object === 'instagram') {
-        try {
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-require('dotenv').config();
-const axios = require('axios');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(bodyParser.json());
-
-// Banco de Dados Temporário na Memória
-let users = []; 
-let leads = [];
-let activeAutomation = {
-    keyword: "QUERO",
-    flow: []
-};
-let userSettings = {
-    openaiKey: "",
-    fbAppId: "",
-    metaToken: "",
-    igBusinessId: "",
-    brandContext: "",
-    aiInstructions: ""
-};
-
-// Helpers para simular o banco de dados
-const getActiveAutomation = () => activeAutomation;
-const getUserSettings = () => userSettings;
-
-// 1. Rota de Verificação do Webhook
-app.get('/webhook', (req, res) => {
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
-
-    if (mode === 'subscribe' && token === process.env.WEBHOOK_VERIFY_TOKEN) {
-        console.log('WEBHOOK_VALIDADO');
-        res.status(200).send(challenge);
-    } else {
-        res.sendStatus(403);
-    }
-});
-
-// 2. Rota que recebe os eventos do Instagram
 app.post('/webhook', async (req, res) => {
     const body = req.body;
     if (body.object === 'instagram') {
         try {
             for (const entry of body.entry) {
+                const igBusinessId = entry.id;
+                const settings = await Settings.findOne({ igBusinessId });
+                if (!settings) continue;
+
+                const automation = await Automation.findOne({ userEmail: settings.userEmail, active: true });
+                if (!automation) continue;
+
                 const change = entry.changes ? entry.changes[0] : null;
                 if (change && change.field === 'comments') {
                     const commentText = change.value.text.toUpperCase();
-                    const senderId = change.value.from.id;
-                    if (activeAutomation.keyword && commentText.includes(activeAutomation.keyword.toUpperCase())) {
-                        await executeFlowInternal(senderId, activeAutomation.flow);
+                    if (automation.keyword && commentText.includes(automation.keyword.toUpperCase())) {
+                        await executeFlowInternal(change.value.from.id, automation.flow, settings);
+                        await Lead.create({ 
+                            userEmail: settings.userEmail, 
+                            ig: `@${change.value.from.username || 'user'}`, 
+                            trigger: automation.keyword, 
+                            aiResponse: "IA Respondeu" 
+                        });
                     }
                 }
             }
-            res.status(200).send('EVENT_RECEIVED');
+            res.status(200).send('OK');
         } catch (err) {
-            res.status(200).send('EVENT_RECEIVED');
+            res.status(200).send('OK');
         }
-    } else {
-        res.sendStatus(404);
-    }
+    } else res.sendStatus(404);
 });
 
-// 3. API de Autenticação (Versão Local)
-app.post('/api/signup', (req, res) => {
-    const { email, password } = req.body;
-    if (users.find(u => u.email === email)) {
-        return res.status(400).json({ success: false, message: "E-mail já cadastrado." });
-    }
-    users.push({ email, password, lastLogin: new Date().toLocaleString() });
-    res.json({ success: true, message: "Conta criada com sucesso!" });
-});
-
-app.post('/api/login', (req, res) => {
-    const { email, password } = req.body;
-    const user = users.find(u => u.email === email && u.password === password);
-    const isAdmin = email === 'richarddasilvacampos25@gmail.com';
-
-    if (!user && !isAdmin) {
-        return res.status(401).json({ success: false, message: "E-mail ou senha incorretos." });
-    }
-    res.json({ 
-        success: true, 
-        message: "Conectado ao Backend Korvia",
-        user: { email, role: isAdmin ? 'admin' : 'user' }
-    });
-});
-
-// 4. API de Configurações
-app.get('/api/settings', (req, res) => res.json(userSettings));
-app.post('/api/settings', (req, res) => {
-    userSettings = { ...userSettings, ...req.body };
-    res.json({ success: true });
-});
-
-// 5. API de Automação
-app.post('/api/publish', (req, res) => {
-    const { keyword, flow } = req.body;
-    activeAutomation.keyword = keyword;
-    activeAutomation.flow = flow;
-    res.json({ success: true });
-});
-
-app.post('/api/process-flow', async (req, res) => {
-    const { recipientId, flow } = req.body;
-    await executeFlowInternal(recipientId, flow);
-    res.json({ success: true });
-});
-
-async function executeFlowInternal(recipientId, flow) {
-    for (const step of flow) {
-        if (step.type === 'delay') {
-            await new Promise(r => setTimeout(r, parseInt(step.content) * 1000));
-            continue;
-        }
-        let text = step.content;
-        if (step.type === 'text' && userSettings.openaiKey) {
-            try {
-                const aiResponse = await axios.post('https://api.openai.com/v1/chat/completions', {
-                    model: 'gpt-3.5-turbo',
-                    messages: [
-                        { role: 'system', content: `IA Korvia. Contexto: ${userSettings.brandContext}. Instruções: ${userSettings.aiInstructions}` },
-                        { role: 'user', content: `Personalize para o Direct: ""` }
-                    ]
-                }, { headers: { 'Authorization': `Bearer ${userSettings.openaiKey}` } });
-                text = aiResponse.data.choices[0].message.content;
-            } catch (e) { console.error("Erro OpenAI"); }
-        }
-        if (userSettings.metaToken && userSettings.igBusinessId) {
-            try {
-                await axios.post(`<https://graph.facebook.com/v21.0/${userSettings.igBusinessId}/messages>`, {
-                    recipient: { id: recipientId },
-                    message: step.type === 'text' ? { text } : { attachment: { type: step.type, payload: { url: step.content } } }
-                }, { headers: { 'Authorization': `Bearer ${userSettings.metaToken}` } });
-            } catch (e) { console.error("Erro Meta"); }
-        }
-    }
-}
-
-// 6. API de Leads
-app.get('/api/leads', (req, res) => res.json(leads));
-app.post('/api/leads', (req, res) => {
-    leads.unshift({ ...req.body, timestamp: new Date() });
-    res.json({ success: true });
-});
-
-app.listen(PORT, () => {
-    console.log(`🚀 SERVIDOR KORVIA ONLINE: http://localhost:`);
-});
-            const activeAutomation = await getActiveAutomation();
-            for (const entry of body.entry) {
-                const change = entry.changes ? entry.changes[0] : null;
-                
-                // Verifica se é um comentário e se a palavra-chave bate
-                if (change && change.field === 'comments') {
-                    const commentText = change.value.text.toUpperCase();
-                    const senderId = change.value.from.id;
-
-                    console.log(`Comentário recebido: "${commentText}" de ${senderId}`);
-
-                    if (activeAutomation.keyword && commentText.includes(activeAutomation.keyword.toUpperCase())) {
-                        console.log("Palavra-chave detectada! Iniciando fluxo automático...");
-                        
-                        // Dispara o motor de automação (reaproveitando a lógica interna)
-                        await executeFlowInternal(senderId, activeAutomation.flow);
-                    }
-                }
-            }
-            res.status(200).send('EVENT_RECEIVED');
-        } catch (err) {
-            console.error("Erro ao processar Webhook:", err.message);
-            res.status(200).send('EVENT_RECEIVED'); // Sempre retorne 200 para o Facebook não desativar seu webhook
-        }
-    } else {
-        res.sendStatus(404);
-    }
-});
-
-// 3. API de Autenticação (Cadastro e Login)
+// 2. Autenticação (Login/Cadastro)
 app.post('/api/signup', async (req, res) => {
     try {
         const { email, password } = req.body;
         const existing = await User.findOne({ email });
-        if (existing) return res.status(400).json({ success: false, message: "E-mail já cadastrado." });
+        if (existing) return res.status(400).json({ success: false, message: "E-mail já existe." });
         await User.create({ email, password, lastLogin: new Date().toLocaleString() });
-        res.json({ success: true, message: "Conta criada com sucesso!" });
-    } catch (e) {
-        res.status(500).json({ success: false, message: "Erro no servidor." });
-    }
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email, password });
-
-    if (!user && email !== 'richarddasilvacampos25@gmail.com') {
-        return res.status(401).json({ success: false, message: "E-mail ou senha incorretos." });
-    }
-
+    if (!user && email !== 'richarddasilvacampos25@gmail.com') return res.status(401).json({ success: false, message: "Dados incorretos." });
     if (user) await User.updateOne({ email }, { lastLogin: new Date().toLocaleString() });
-    res.json({ 
-        success: true, 
-        message: "Conectado ao Backend Korvia",
-        user: { email, role: email === 'richarddasilvacampos25@gmail.com' ? 'admin' : 'user' }
-    });
+    res.json({ success: true, user: { email } });
 });
 
-// 4. API de Configurações
-app.get('/api/settings', async (req, res) => res.json(await getUserSettings()));
+// 3. Gerenciamento de Dados (Por Usuário)
+app.get('/api/settings', async (req, res) => {
+    const email = req.headers['x-user-email'];
+    res.json(await Settings.findOne({ userEmail: email }) || {});
+});
+
 app.post('/api/settings', async (req, res) => {
-    const settings = await getUserSettings();
-    await Settings.updateOne({ _id: settings._id }, req.body);
-    console.log('Configurações atualizadas pelo usuário no painel.');
+    const email = req.headers['x-user-email'];
+    await Settings.findOneAndUpdate({ userEmail: email }, { ...req.body, userEmail: email }, { upsert: true });
     res.json({ success: true });
 });
 
-// API para Publicar Automação (Envia do Painel para o Cérebro do Servidor)
 app.post('/api/publish', async (req, res) => {
-    const { keyword, flow } = req.body;
-    const auto = await getActiveAutomation();
-    await Automation.updateOne({ _id: auto._id }, { keyword, flow });
-    console.log(`Automação publicada no servidor! Keyword: ${keyword}`);
+    const email = req.headers['x-user-email'];
+    await Automation.findOneAndUpdate({ userEmail: email }, { ...req.body, userEmail: email }, { upsert: true });
     res.json({ success: true });
 });
 
-// 6. Motor de Execução de Automação (A ponte para OpenAI e Meta)
+app.get('/api/leads', async (req, res) => {
+    const email = req.headers['x-user-email'];
+    res.json(await Lead.find({ userEmail: email }).sort({ timestamp: -1 }));
+});
+
 app.post('/api/process-flow', async (req, res) => {
-    const { recipientId, flow, isSimulation } = req.body;
-    await executeFlowInternal(recipientId, flow);
+    const email = req.headers['x-user-email'];
+    const settings = await Settings.findOne({ userEmail: email });
+    await executeFlowInternal(req.body.recipientId, req.body.flow, settings);
     res.json({ success: true });
 });
 
-// Função interna que faz o trabalho pesado de falar com OpenAI e Meta
-async function executeFlowInternal(recipientId, flow) {
-    const settings = await getUserSettings();
+async function executeFlowInternal(recipientId, flow, settings) {
+    if (!settings || !settings.metaToken) return;
     for (const step of flow) {
         if (step.type === 'delay') {
             await new Promise(r => setTimeout(r, parseInt(step.content) * 1000));
@@ -295,32 +150,26 @@ async function executeFlowInternal(recipientId, flow) {
         }
         let text = step.content;
         if (step.type === 'text' && settings.openaiKey) {
-            const aiResponse = await axios.post('https://api.openai.com/v1/chat/completions', {
-                model: 'gpt-3.5-turbo',
-                messages: [
-                    { role: 'system', content: `IA Korvia. Contexto: ${settings.brandContext}. Instruções: ${settings.aiInstructions}` },
-                    { role: 'user', content: `Personalize para o Direct: "${text}"` }
-                ]
-            }, { headers: { 'Authorization': `Bearer ${settings.openaiKey}` } });
-            text = aiResponse.data.choices[0].message.content;
+            try {
+                const aiRes = await axios.post('https://api.openai.com/v1/chat/completions', {
+                    model: 'gpt-3.5-turbo',
+                    messages: [
+                        { role: 'system', content: `Contexto: ${settings.brandContext}. Instruções: ${settings.aiInstructions}` },
+                        { role: 'user', content: text }
+                    ]
+                }, { headers: { 'Authorization': `Bearer ${settings.openaiKey}` } });
+                text = aiRes.data.choices[0].message.content;
+            } catch (e) {}
         }
-        if (settings.metaToken && settings.igBusinessId) {
-            await axios.post(`https://graph.facebook.com/v21.0/${settings.igBusinessId}/messages`, {
+        if (settings.metaToken) {
+            await axios.post(`https://graph.facebook.com/v21.0/me/messages`, {
                 recipient: { id: recipientId },
-                message: step.type === 'text' ? { text } : { attachment: { type: step.type, payload: { url: step.content } } }
-            }, { headers: { 'Authorization': `Bearer ${settings.metaToken}` } });
+                message: { text }
+            }, { headers: { Authorization: `Bearer ${settings.metaToken}` } }).catch(() => {});
         }
     }
 }
 
-// 5. API de Leads
-app.get('/api/leads', async (req, res) => res.json(await Lead.find().sort({ timestamp: -1 })));
-app.post('/api/leads', async (req, res) => {
-    const newLead = await Lead.create(req.body);
-    res.json({ success: true });
-});
-
 app.listen(PORT, () => {
-    console.log(`\n🚀 SERVIDOR KORVIA BACKEND ATIVO`);
-    console.log(`📡 Endereço local: http://localhost:${PORT}`);
+    console.log(`🚀 SERVIDOR ONLINE: http://localhost:${PORT}`);
 });
