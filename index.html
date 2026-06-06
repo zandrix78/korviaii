@@ -1008,6 +1008,10 @@
     </div>
 
     <script>
+        // --- CONFIGURAÇÃO DE CONEXÃO ---
+        // Link do seu servidor hospedado no Render:
+        const API_URL = "https://korviaii.onrender.com"; 
+
         // AUTH LOGIC
         let authMode = 'login'; // 'login' or 'signup'
 
@@ -1069,11 +1073,16 @@
             }
 
             try {
-                const response = await fetch('http://localhost:3000/api/login', {
+                // Se estiver no modo signup, chama /api/signup, senão /api/login
+                // Tenta conectar ao backend real primeiro
+                const endpoint = authMode === 'signup' ? '/api/signup' : '/api/login';
+                
+                const response = await fetch(`${API_URL}${endpoint}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
+                
                 const data = await response.json();
                 
                 if (data.success) {
@@ -1088,6 +1097,37 @@
                 }
             } catch (e) {
                 alert("Erro ao conectar com o servidor backend. Certifique-se que o server.js está rodando.");
+                // MODO DE SIMULAÇÃO (Para funcionar no GitHub Pages sem servidor)
+                console.warn("Servidor offline. Usando modo de simulação local.");
+                
+                let users = JSON.parse(localStorage.getItem('korvia_simulated_users') || '[]');
+                
+                if (authMode === 'signup') {
+                    if (users.find(u => u.email === email)) {
+                        return alert("Este e-mail já está cadastrado.");
+                    }
+                    users.push({ email, password });
+                    localStorage.setItem('korvia_simulated_users', JSON.stringify(users));
+                    alert("Conta criada com sucesso! Agora faça login.");
+                    authMode = 'login';
+                    updateAuthUI();
+                } else {
+                    // Login Admin ou Usuário Simulado
+                    const user = users.find(u => u.email === email && u.password === password);
+                    const isAdmin = email === 'richarddasilvacampos25@gmail.com';
+                    
+                    if (user || isAdmin) {
+                        localStorage.setItem('korvia_loggedInUser', email);
+                        updateUserUI(email);
+                        document.getElementById('view-landing').classList.add('hidden');
+                        document.getElementById('view-auth').classList.add('hidden');
+                        document.getElementById('view-app').classList.remove('hidden');
+                        renderDashboard();
+                        switchTab('dashboard');
+                    } else {
+                        alert("Erro: E-mail ou senha incorretos.");
+                    }
+                }
             }
         }
 
@@ -1611,30 +1651,41 @@
             };
 
             try {
-                const response = await fetch('http://localhost:3000/api/settings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newSettings)
-                });
-                const data = await response.json();
-                if (data.success) {
-                    KorviaDB.setSettings({ ...newSettings, igConnected: true });
-                    updateStatusLEDs();
-                    alert("Configurações aplicadas com sucesso! Sua IA já pode operar.");
+                if (API_URL) {
+                    const response = await fetch(`${API_URL}/api/settings`, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify(newSettings) 
+                    });
+                    const data = await response.json();
+                    if (!data.success) throw new Error("Erro no servidor");
                 }
+                KorviaDB.setSettings({ ...newSettings, igConnected: true });
+                alert("Configurações salvas com sucesso!");
             } catch (e) {
-                alert("Erro ao salvar no servidor.");
+                KorviaDB.setSettings({ ...newSettings, igConnected: true });
+                alert("Salvo localmente (Servidor Offline)");
             }
+            updateStatusLEDs();
+            renderDashboard();
         }
 
         async function syncSettingsWithServer() {
-            try {
-                const response = await fetch('http://localhost:3000/api/settings');
-                const settings = await response.json();
-                const local = KorviaDB.getSettings();
-                KorviaDB.setSettings({ ...local, ...settings });
-                renderDashboard();
-            } catch(e) {}
+            let settings = KorviaDB.getSettings();
+            
+            if (API_URL) {
+                try {
+                    const response = await fetch(`${API_URL}/api/settings`);
+                    const serverSettings = await response.json();
+                    settings = { ...settings, ...serverSettings };
+                    KorviaDB.setSettings(settings);
+                } catch(e) { console.warn("Erro ao sincronizar com servidor."); }
+            }
+
+            if(document.getElementById('openai-key')) document.getElementById('openai-key').value = settings.openaiKey || '';
+            if(document.getElementById('brand-context')) document.getElementById('brand-context').value = settings.brandContext || '';
+            if(document.getElementById('ai-instructions')) document.getElementById('ai-instructions').value = settings.aiInstructions || '';
+            renderDashboard();
         }
 
         // PUBLICAR E REMOVER
@@ -1647,26 +1698,27 @@
             const keyword = document.getElementById('flow-keyword').value.toUpperCase();
             
             try {
-                // Envia para o Backend para que o Webhook saiba o que fazer
-                await fetch('http://localhost:3000/api/publish', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ keyword, flow })
-                });
-
-                KorviaDB.updateAutomation(currentAutomationId, { 
-                    keyword: keyword,
-                    flow: flow,
-                    lastPublished: new Date().toISOString()
-                });
-
-                localStorage.setItem('korvia_published_keyword', keyword);
-                KorviaDB.addLog(`Automação publicada com keyword: ${keyword}`);
-                alert("Automação publicada e ativa! O servidor agora monitora seu Instagram 24h.");
-                switchTab('dashboard');
+                if (API_URL) {
+                    const response = await fetch(`${API_URL}/api/publish`, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ keyword, flow }) 
+                    });
+                    const data = await response.json();
+                    if (!data.success) throw new Error("Erro no servidor");
+                }
+                alert("Automação publicada e ATIVA!");
             } catch (e) {
-                alert("Erro ao conectar com o servidor para publicar.");
+                alert("Salvo localmente (Servidor Offline)");
             }
+
+            KorviaDB.updateAutomation(currentAutomationId, { 
+                keyword: keyword,
+                flow: flow,
+                lastPublished: new Date().toISOString()
+            });
+            localStorage.setItem('korvia_published_keyword', keyword);
+            switchTab('dashboard');
         }
 
         function deleteAutomation() {
@@ -1793,20 +1845,28 @@
         async function processFullFlow(recipientId, isSimulation = false) {
             const flow = KorviaDB.getFlow();
             
-            try {
-                const response = await fetch('http://localhost:3000/api/process-flow', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ recipientId, flow, isSimulation })
-                });
-                const data = await response.json();
-                if (!data.success && isSimulation) alert("Erro no Servidor: " + data.error);
-                return data.success;
-            } catch (e) {
-                console.error("Erro ao processar fluxo:", e);
-                if (isSimulation) alert("Certifique-se de que o arquivo server.js está rodando!");
-                return false;
+            if (API_URL && !isSimulation) {
+                try {
+                    await fetch(`${API_URL}/api/process-flow`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ recipientId, flow })
+                    });
+                    return true;
+                } catch (e) { console.error("Erro API Flow"); }
             }
+            
+            console.log("Simulando execução do fluxo para:", recipientId);
+            for (const step of flow) {
+                if (step.type === 'text') {
+                    console.log("IA enviando:", step.content);
+                }
+                if (step.type === 'delay') {
+                    await new Promise(r => setTimeout(r, parseInt(step.content) * 1000));
+                }
+            }
+            
+            return true;
         }
 
         // BOTÃO "ENVIAR AGORA" - Faz a automação funcionar para teste
