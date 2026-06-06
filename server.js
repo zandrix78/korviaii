@@ -14,7 +14,7 @@ app.use(bodyParser.json());
 // 1. Conexão com Banco de Dados (Com Fallback para Memória se você não configurou o MongoDB)
 const hasDB = !!process.env.MONGODB_URI;
 if (hasDB) {
-    mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    mongoose.connect(process.env.MONGODB_URI)
         .then(() => console.log('✅ MongoDB Online'))
         .catch(err => console.error('❌ Erro de Conexão MongoDB:', err));
 } else {
@@ -134,7 +134,8 @@ app.post('/api/login', async (req, res) => {
 // 3. Gerenciamento de Dados (Por Usuário)
 app.get('/api/settings', async (req, res) => {
     const email = req.headers['x-user-email'];
-    res.json((hasDB ? await Settings.findOne({ userEmail: email }) : settingsMem[email]) || {});
+    const data = hasDB ? await Settings.findOne({ userEmail: email }) : settingsMem[email];
+    res.json(data || {});
 });
 
 app.post('/api/settings', async (req, res) => {
@@ -170,7 +171,7 @@ async function executeFlowInternal(recipientId, flow, settings) {
             await new Promise(r => setTimeout(r, parseInt(step.content) * 1000));
             continue;
         }
-
+        
         let messageData = {};
 
         if (step.type === 'text') {
