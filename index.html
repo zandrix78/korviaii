@@ -1073,50 +1073,27 @@
             }
 
             try {
-                // 1. Tenta falar com o servidor no Render (aguarda o "wake up")
                 if (API_URL) {
                     const endpoint = authMode === 'signup' ? '/api/signup' : '/api/login';
                     const response = await fetch(`${API_URL}${endpoint}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email, password })
-                    }).catch(() => null); 
+                    });
 
-                    if (response && response.ok) {
+                    if (response.ok) {
                         const data = await response.json();
                         if (data.success) {
                             localStorage.setItem('korvia_loggedInUser', email);
                             enterApp(email);
                             return;
                         }
+                        return alert(data.message);
                     }
                 }
-
-                // 2. Se o servidor falhar ou estiver offline, usa a Simulação Local
-                handleSimulatedAuth(email, password);
+                alert("Servidor em manutenção ou acordando. Tente novamente em 30 segundos.");
             } catch (e) {
-                handleSimulatedAuth(email, password);
-            }
-        }
-
-        function handleSimulatedAuth(email, password) {
-            let users = JSON.parse(localStorage.getItem('korvia_users') || '[]');
-            if (authMode === 'signup') {
-                if (users.find(u => u.email === email)) return alert("Este e-mail já está cadastrado localmente.");
-                users.push({ email, password, lastLogin: new Date().toLocaleString('pt-BR') });
-                localStorage.setItem('korvia_users', JSON.stringify(users));
-                alert("Conta simulada criada com sucesso! Agora faça login.");
-                authMode = 'login'; updateAuthUI();
-            } else {
-                const user = users.find(u => u.email === email && u.password === password);
-                const isAdmin = (email === 'richarddasilvacampos25@gmail.com');
-                
-                if (user || isAdmin) {
-                        localStorage.setItem('korvia_loggedInUser', email);
-                    enterApp(email);
-                    } else {
-                    alert("E-mail ou senha incorretos. Tente criar uma nova conta.");
-                }
+                alert("Erro de conexão com o servidor.");
             }
         }
 
@@ -1842,17 +1819,15 @@
 
         // EXECUTOR DE FLUXO VIA BACKEND (Real e Seguro)
         async function processFullFlow(recipientId, isSimulation = false) {
-            const flow = KorviaDB.getFlow();
-            
             if (API_URL && !isSimulation) {
-                try {
-                    await fetch(`${API_URL}/api/process-flow`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ recipientId, flow })
-                    });
-                    return true;
-                } catch (e) { console.error("Erro API Flow"); }
+                const userEmail = localStorage.getItem('korvia_loggedInUser');
+                const flow = KorviaDB.getFlow();
+                await fetch(`${API_URL}/api/process-flow`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-user-email': userEmail },
+                    body: JSON.stringify({ recipientId, flow })
+                });
+                return true;
             }
             
             console.log("Simulando execução do fluxo para:", recipientId);
@@ -1907,14 +1882,21 @@
             }
         }
 
-        function renderLeads() {
+        async function renderLeads() {
             const body = document.getElementById('leads-table-body');
-            const leads = KorviaDB.getLeads();
+            let leads = KorviaDB.getLeads(); // Local por padrão
+
+            if (API_URL) {
+                const userEmail = localStorage.getItem('korvia_loggedInUser');
+                const res = await fetch(`${API_URL}/api/leads`, { headers: { 'x-user-email': userEmail } });
+                leads = await res.json();
+            }
+
             body.innerHTML = leads.length ? leads.map(l => `
                 <tr class="border-t border-slate-800 hover:bg-slate-800/30 transition-colors">
                     <td class="p-4 font-semibold">${l.name} <br> <span class="text-xs text-blue-400">${l.ig}</span></td>
-                    <td class="p-4 text-slate-300">${l.email}</td>
-                    <td class="p-4 text-slate-500">${l.date} <span class="text-[10px] opacity-50">${l.time || ''}</span></td>
+                    <td class="p-4 text-slate-300">${l.email || 'N/A'}</td>
+                    <td class="p-4 text-slate-500">${new Date(l.timestamp).toLocaleDateString()}</td>
                     <td class="p-4"><span class="text-xs text-slate-400 italic">"${l.aiResponse || 'Ação padrão'}"</span></td>
                 </tr>
             `).join('') : '<tr><td colspan="4" class="p-8 text-center text-slate-500 italic">Nenhum lead capturado ainda. Teste o fluxo de automação!</td></tr>';
@@ -2023,13 +2005,16 @@
             const loggedInUser = localStorage.getItem('korvia_loggedInUser');
             if (loggedInUser) {
                 updateUserUI(loggedInUser);
-                syncSettingsWithServer();
-                renderDashboard();
-                renderFlowSteps();
+                // Carrega tudo do servidor para garantir que os dados não sumiram
+                syncSettingsWithServer().then(() => {
+                    renderDashboard();
+                    renderLeads();
+                    renderFlowSteps();
+                });
             }
             initTypingHero();
             renderLandingFAQ();
         }
     </script>
 </body>
-</html>
+</html 
