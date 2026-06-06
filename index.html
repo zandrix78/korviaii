@@ -674,6 +674,21 @@
                 <i data-lucide="users" class="w-5 h-5"></i>
                 <span class="text-[8px] font-black uppercase tracking-widest">Leads</span>
             </button>
+--- a/c:\Users\claud\Downloads\index.html
++++ b/c:\Users\claud\Downloads\index.html
+@@ -1318,7 +1318,7 @@
+                     });
+                     if (response.ok) {
+                         const serverSettings = await response.json();
+-                        if (serverSettings && serverSettings.userEmail) {
++                        if (serverSettings && Object.keys(serverSettings).length > 0) {
+                             settings = { ...settings, ...serverSettings };
+                             KorviaDB.setSettings(settings);
+                         }
+            <button onclick="switchTab('admin')" id="m-nav-admin" class="flex flex-col items-center gap-1 text-slate-500 transition-all hidden">
+                <i data-lucide="shield-check" class="w-5 h-5"></i>
+                <span class="text-[8px] font-black uppercase tracking-widest">Admin</span>
+            </button>
         </nav>
 
         <!-- Main Content -->
@@ -1106,6 +1121,7 @@
             const isAdmin = email === 'richarddasilvacampos25@gmail.com';
             const displayName = document.getElementById('user-display-name');
             const adminNav = document.getElementById('nav-admin');
+            const mobileAdminNav = document.getElementById('m-nav-admin');
 
             if (displayName && email) {
                 displayName.innerText = isAdmin ? "RICHARD (ADM)" : email.split('@')[0];
@@ -1113,8 +1129,10 @@
 
             if (isAdmin) {
                 adminNav.classList.remove('hidden');
+                if (mobileAdminNav) mobileAdminNav.classList.remove('hidden');
             } else {
                 adminNav.classList.add('hidden');
+                if (mobileAdminNav) mobileAdminNav.classList.add('hidden');
             }
         }
 
