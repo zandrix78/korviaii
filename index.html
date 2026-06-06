@@ -1073,62 +1073,61 @@
             }
 
             try {
-                // Se estiver no modo signup, chama /api/signup, senão /api/login
-                // Tenta conectar ao backend real primeiro
-                const endpoint = authMode === 'signup' ? '/api/signup' : '/api/login';
-                
-                const response = await fetch(`${API_URL}${endpoint}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    localStorage.setItem('korvia_loggedInUser', email);
-                    updateUserUI(email);
-                    document.getElementById('view-landing').classList.add('hidden');
-                    document.getElementById('view-auth').classList.add('hidden');
-                    document.getElementById('view-app').classList.remove('hidden');
-                    syncSettingsWithServer();
-                    renderDashboard();
-                    switchTab('dashboard');
+                // 1. Tenta falar com o servidor no Render (aguarda o "wake up")
+                if (API_URL) {
+                    const endpoint = authMode === 'signup' ? '/api/signup' : '/api/login';
+                    const response = await fetch(`${API_URL}${endpoint}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    }).catch(() => null); 
+
+                    if (response && response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            localStorage.setItem('korvia_loggedInUser', email);
+                            enterApp(email);
+                            return;
+                        }
+                    }
                 }
+
+                // 2. Se o servidor falhar ou estiver offline, usa a Simulação Local
+                handleSimulatedAuth(email, password);
             } catch (e) {
-                alert("Erro ao conectar com o servidor backend. Certifique-se que o server.js está rodando.");
-                // MODO DE SIMULAÇÃO (Para funcionar no GitHub Pages sem servidor)
-                console.warn("Servidor offline. Usando modo de simulação local.");
+                handleSimulatedAuth(email, password);
+            }
+        }
+
+        function handleSimulatedAuth(email, password) {
+            let users = JSON.parse(localStorage.getItem('korvia_users') || '[]');
+            if (authMode === 'signup') {
+                if (users.find(u => u.email === email)) return alert("Este e-mail já está cadastrado localmente.");
+                users.push({ email, password, lastLogin: new Date().toLocaleString('pt-BR') });
+                localStorage.setItem('korvia_users', JSON.stringify(users));
+                alert("Conta simulada criada com sucesso! Agora faça login.");
+                authMode = 'login'; updateAuthUI();
+            } else {
+                const user = users.find(u => u.email === email && u.password === password);
+                const isAdmin = (email === 'richarddasilvacampos25@gmail.com');
                 
-                let users = JSON.parse(localStorage.getItem('korvia_simulated_users') || '[]');
-                
-                if (authMode === 'signup') {
-                    if (users.find(u => u.email === email)) {
-                        return alert("Este e-mail já está cadastrado.");
-                    }
-                    users.push({ email, password });
-                    localStorage.setItem('korvia_simulated_users', JSON.stringify(users));
-                    alert("Conta criada com sucesso! Agora faça login.");
-                    authMode = 'login';
-                    updateAuthUI();
-                } else {
-                    // Login Admin ou Usuário Simulado
-                    const user = users.find(u => u.email === email && u.password === password);
-                    const isAdmin = email === 'richarddasilvacampos25@gmail.com';
-                    
-                    if (user || isAdmin) {
+                if (user || isAdmin) {
                         localStorage.setItem('korvia_loggedInUser', email);
-                        updateUserUI(email);
-                        document.getElementById('view-landing').classList.add('hidden');
-                        document.getElementById('view-auth').classList.add('hidden');
-                        document.getElementById('view-app').classList.remove('hidden');
-                        renderDashboard();
-                        switchTab('dashboard');
+                    enterApp(email);
                     } else {
-                        alert("Erro: E-mail ou senha incorretos.");
-                    }
+                    alert("E-mail ou senha incorretos. Tente criar uma nova conta.");
                 }
             }
+        }
+
+        function enterApp(email) {
+            updateUserUI(email);
+            document.getElementById('view-landing').classList.add('hidden');
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('view-app').classList.remove('hidden');
+            syncSettingsWithServer();
+            renderDashboard();
+            switchTab('dashboard');
         }
 
         function updateUserUI(email) {
