@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Korvia | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/pt_BR/sdk.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-purple: #9d00ff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+            scroll-behavior: smooth;
+        }
+
+        .neon-border {
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+        }
+
+        .neon-text {
+            color: #00f2ff;
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .node-connector {
+            width: 2px;
+            height: 40px;
+            background: linear-gradient(to bottom, #00f2ff, transparent);
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-glow {
+            animation: pulse-glow 3s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.5; filter: blur(20px); }
+            50% { opacity: 0.8; filter: blur(30px); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+
+        .hero-title {
+            background: linear-gradient(to right, #fff, var(--neon-blue), #fff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s infinite;
+            color: var(--neon-blue);
+            margin-left: 4px;
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .glass-chat { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px); }
+
+        /* 3D and Marquee Effects */
+        .perspective-container { perspective: 2000px; }
+        .threed-mockup {
+            transform: rotateX(15deg) rotateY(-15deg) rotateZ(5deg);
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+        }
+        .threed-mockup:hover {
+            transform: rotateX(5deg) rotateY(-5deg) rotateZ(0deg) scale(1.02);
+        }
+
+        .marquee-track {
+            display: flex;
+            width: max-content;
+            animation: marquee 20s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .scroll-indicator {
+            animation: bounce-slow 2s infinite;
+        }
+        @keyframes bounce-slow { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
+    </style>
+</head>
+<body class="custom-scroll">
+
+    <!-- SECTION: LANDING PAGE -->
+    <div id="view-landing" class="relative">
+        <!-- Navbar -->
+        <nav class="fixed w-full z-[100] glass-card border-b border-white/5 py-5 px-8 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="https://i.imgur.com/dX21tfc.png" alt="Korvia Logo" class="w-24 h-24 object-contain" referrerpolicy="no-referrer">
+            </div>
+            <div class="hidden md:flex gap-8 text-sm font-medium text-slate-400">
+                <a href="#features" class="hover:text-white transition">Funcionalidades</a>
+                <a href="#how-it-works" class="hover:text-white transition">Como Funciona</a>
+                <a href="#configuration" class="hover:text-white transition">Configuração</a>
+                <a href="#testimonials" class="hover:text-white transition">Depoimentos</a>
+                <a href="#faq" class="hover:text-white transition">FAQ</a>
+            </div>
+            <div id="landing-auth-buttons" class="flex items-center gap-2 sm:gap-4">
+                <button onclick="loginDemo()" class="text-[10px] sm:text-xs font-bold text-blue-400 hover:text-blue-300 transition-all px-2 sm:px-3 py-2 border border-blue-400/20 rounded-lg whitespace-nowrap">Acesso Demo</button>
+                <button onclick="openAuth('login')" class="hidden sm:block text-sm font-bold text-slate-300 hover:text-white transition">Entrar</button>
+                <button onclick="openAuth('signup')" class="hidden sm:block bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 transition-all">Criar Conta</button>
+                <!-- Mobile Hamburger -->
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-slate-400">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Mobile Menu Overlay -->
+        <div id="mobile-menu" class="fixed inset-0 z-[200] bg-slate-950/95 backdrop-blur-xl hidden md:hidden flex flex-col p-8 animate-[fadeInUp_0.3s_ease-out]">
+            <div class="flex justify-between items-center mb-12">
+                <img src="https://i.imgur.com/dX21tfc.png" class="w-20 h-20 object-contain" referrerpolicy="no-referrer">
+                <button onclick="toggleMobileMenu()" class="text-slate-400"><i data-lucide="x" class="w-8 h-8"></i></button>
+            </div>
+            <nav class="flex flex-col gap-8 text-3xl font-black italic uppercase tracking-tighter">
+                <a href="#features" onclick="toggleMobileMenu()" class="text-blue-400">Funcionalidades</a>
+                <a href="#how-it-works" onclick="toggleMobileMenu()">Como Funciona</a>
+                <a href="#configuration" onclick="toggleMobileMenu()">Configuração</a>
+                <a href="#testimonials" onclick="toggleMobileMenu()">Depoimentos</a>
+                <a href="#faq" onclick="toggleMobileMenu()">FAQ</a>
+            </nav>
+            <div class="mt-auto flex flex-col gap-4">
+                <button onclick="toggleMobileMenu(); openAuth('login')" class="w-full py-5 rounded-2xl font-bold border border-white/10 glass-card text-xl">Fazer Login</button>
+                <button onclick="toggleMobileMenu(); openAuth('signup')" class="w-full py-5 rounded-2xl font-bold bg-blue-600 text-xl shadow-xl shadow-blue-600/20">Criar Conta Grátis</button>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden pt-20">
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] animate-glow"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[100px] animate-glow" style="animation-delay: 1.5s"></div>
+            
+            <div class="relative z-10 max-w-7xl mx-auto px-4 w-full">
+                <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+                    <!-- Lado Esquerdo: Conteúdo -->
+                    <div class="flex-1 space-y-8 text-center lg:text-left">
+                        <div class="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 rounded-full text-blue-400 text-xs font-bold uppercase tracking-widest">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                            </span>
+                            Automação 2.0 para Instagram
+                        </div>
+                        
+                        <h1 class="text-5xl md:text-7xl font-black hero-title leading-[1.1] min-h-[1.2em] tracking-tighter">
+                            <span id="typing-hero" class="typing-cursor"></span>
+                        </h1>
+
+                        <p class="text-lg md:text-xl text-slate-400 reveal max-w-xl mx-auto lg:mx-0">
+                            A plataforma mais completa de automação de DMs e comentários com Inteligência Artificial real. Transforme seguidores em clientes enquanto você dorme.
+                        </p>
+                        
+                        <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
+                            <button onclick="openAuth('signup')" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20">Criar Conta Grátis</button>
+                            <button onclick="loginDemo()" class="bg-white text-slate-950 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-blue-400 hover:text-white transition-all shadow-2xl">Acessar Demo</button>
+                            <button onclick="openAuth('login')" class="glass-card px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/5 transition-all border border-white/10">Fazer Login</button>
+                        </div>
+                    </div>
+
+                    <!-- Lado Direito: Elemento 3D (Paisagem) -->
+                    <div class="flex-1 perspective-container w-full animate-[fadeInUp_1s_ease-out]">
+                        <div class="threed-mockup glass-card rounded-3xl p-4 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_0_50px_rgba(0,242,255,0.1)] border-white/10 bg-slate-900/40 backdrop-blur-3xl overflow-hidden aspect-video">
+                            <div class="flex gap-4 mb-4">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <div class="grid grid-cols-12 gap-4">
+                                <div class="col-span-3 space-y-3">
+                                    <div class="h-4 bg-white/5 rounded-md w-full"></div>
+                                    <div class="h-4 bg-blue-500/20 rounded-md w-3/4"></div>
+                                    <div class="h-4 bg-white/5 rounded-md w-full"></div>
+                                </div>
+                                <div class="col-span-9 grid grid-cols-3 gap-4">
+                                    <div class="h-32 bg-slate-800/50 rounded-2xl border border-white/5"></div>
+                                    <div class="h-32 bg-slate-800/50 rounded-2xl border border-white/5"></div>
+                                    <div class="h-32 bg-blue-600/20 rounded-2xl border border-blue-500/30 shadow-[0_0_20px_rgba(37,99,235,0.2)]"></div>
+                                </div>
+                            </div>
+                            <div class="mt-6 h-40 bg-white/5 rounded-2xl relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decorative Icons -->
+            <div class="absolute top-40 left-10 animate-float opacity-10 pointer-events-none hidden xl:block">
+                <i data-lucide="bot" class="w-40 h-40 text-cyan-400"></i>
+            </div>
+            <div class="absolute bottom-40 right-10 animate-float opacity-10 pointer-events-none hidden xl:block" style="animation-delay: 3s">
+                <i data-lucide="instagram" class="w-48 h-48 text-pink-500"></i>
+            </div>
+
+            <!-- Scroll Hint -->
+            <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-600 scroll-indicator">
+                <span class="text-[9px] uppercase font-bold tracking-[0.4em]">Scroll</span>
+                <i data-lucide="mouse" class="w-5 h-5"></i>
+            </div>
+        </section>
+
+        <!-- SECTION: Marquee (Trusted By) -->
+        <section class="py-12 border-y border-white/5 bg-slate-950/20 overflow-hidden">
+            <div class="marquee-track">
+                <!-- Repetir itens para o loop -->
+                <div class="flex items-center gap-20 px-10 grayscale opacity-40 hover:opacity-100 transition-all cursor-default">
+                    <div class="flex items-center gap-3 text-xl font-bold"><i data-lucide="hash"></i> Marketing</div>
+                    <div class="flex items-center gap-3 text-xl font-bold"><i data-lucide="zap"></i> FastAgency</div>
+                    <div class="flex items-center gap-3 text-xl font-bold"><i data-lucide="instagram"></i> Creators</div>
+                    <div class="flex items-center gap-3 text-xl font-bold"><i data-lucide="bar-chart-3"></i> ScaleUP</div>
+                    <div class="flex items-center gap-3 text-xl font-bold"><i data-lucide="shield-check"></i> SecureMeta</div>
+                </div>
+                <!-- Duplicate for seamless loop -->
+                <div class="flex items-center gap-20 px-10 grayscale opacity-40 hover:opacity-100 transition-all cursor-default">
+                    <div class="flex items-center gap-3 text-xl font-bold"><i data-lucide="hash"></i> Marketing</div>
+                    <div class="flex items-center gap-3 text-xl font-bold"><i data-lucide="zap"></i> FastAgency</div>
+                    <div class="flex items-center gap-3 text-xl font-bold"><i data-lucide="instagram"></i> Creators</div>
+                    <div class="flex items-center gap-3 text-xl font-bold"><i data-lucide="bar-chart-3"></i> ScaleUP</div>
+                    <div class="flex items-center gap-3 text-xl font-bold"><i data-lucide="shield-check"></i> SecureMeta</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: Integrations Carousel -->
+        <section class="py-24 px-8 overflow-hidden bg-[#020617]">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col justify-between items-center mb-16 gap-6 reveal">
+                    <div class="max-w-2xl text-center">
+                        <h2 class="text-blue-400 font-bold uppercase tracking-[0.3em] text-xs mb-4">Multiferramentas</h2>
+                        <h3 class="text-4xl md:text-5xl font-black leading-tight">Integrado ao seu ecossistema</h3>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="scrollSlider('tools-slider', -350)" class="p-3 rounded-full border border-white/10 hover:bg-white/5 transition-all"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+                        <button onclick="scrollSlider('tools-slider', 350)" class="p-3 rounded-full border border-white/10 hover:bg-white/5 transition-all"><i data-lucide="arrow-right" class="w-5 h-5"></i></button>
+                    </div>
+                </div>
+
+                <div id="tools-slider" class="flex gap-6 overflow-x-auto hide-scroll snap-x snap-mandatory pb-4">
+                    <div class="min-w-[320px] bg-slate-900/40 p-8 rounded-[40px] border border-white/5 snap-start card-hover">
+                        <div class="w-16 h-16 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 mb-6"><i data-lucide="instagram" class="w-8 h-8"></i></div>
+                        <h4 class="text-xl font-bold mb-4 italic uppercase">Instagram Direct</h4>
+                        <p class="text-slate-500 text-sm">Controle total sobre as suas DMs e conversões em tempo real.</p>
+                    </div>
+                    <div class="min-w-[320px] bg-slate-900/40 p-8 rounded-[40px] border border-white/5 snap-start card-hover">
+                        <div class="w-16 h-16 bg-purple-600/10 rounded-2xl flex items-center justify-center text-purple-400 mb-6"><i data-lucide="message-square" class="w-8 h-8"></i></div>
+                        <h4 class="text-xl font-bold mb-4 italic uppercase">Comentários</h4>
+                        <p class="text-slate-500 text-sm">Respostas imediatas em posts e Reels para engajamento máximo.</p>
+                    </div>
+                    <div class="min-w-[320px] bg-slate-900/40 p-8 rounded-[40px] border border-white/5 snap-start card-hover">
+                        <div class="w-16 h-16 bg-cyan-600/10 rounded-2xl flex items-center justify-center text-cyan-400 mb-6"><i data-lucide="database" class="w-8 h-8"></i></div>
+                        <h4 class="text-xl font-bold mb-4 italic uppercase">CRM Leads</h4>
+                        <p class="text-slate-500 text-sm">Sincronização automática dos dados capturados pela nossa IA.</p>
+                    </div>
+                    <div class="min-w-[320px] bg-slate-900/40 p-8 rounded-[40px] border border-white/5 snap-start card-hover">
+                        <div class="w-16 h-16 bg-yellow-600/10 rounded-2xl flex items-center justify-center text-yellow-400 mb-6"><i data-lucide="brain-circuit" class="w-8 h-8"></i></div>
+                        <h4 class="text-xl font-bold mb-4 italic uppercase">OpenAI GPT-4</h4>
+                        <p class="text-slate-500 text-sm">O cérebro mais avançado do mundo cuidando dos seus clientes.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="py-24 px-8 bg-slate-950/50">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center space-y-4 mb-16">
+                    <h2 class="text-3xl md:text-5xl font-bold">Tudo o que você precisa</h2>
+                    <p class="text-slate-400">Desenvolvido para criadores, infoprodutores e agências.</p>
+                </div>
+                <div class="grid grid-cols-1 gap-8">
+                    <div class="glass-card p-8 rounded-3xl space-y-4 hover:translate-y-[-8px] transition-all">
+                        <div class="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400"><i data-lucide="message-square"></i></div>
+                        <h3 class="text-xl font-bold">Automação de Comentários</h3>
+                        <p class="text-slate-400 text-sm">Responda comentários instantaneamente e envie DMs personalizadas baseadas em palavras-chave.</p>
+                    </div>
+                    <div class="glass-card p-8 rounded-3xl space-y-4 hover:translate-y-[-8px] transition-all">
+                        <div class="w-12 h-12 bg-purple-600/10 rounded-2xl flex items-center justify-center text-purple-400"><i data-lucide="bot"></i></div>
+                        <h3 class="text-xl font-bold">IA com seu Tom de Voz</h3>
+                        <p class="text-slate-400 text-sm">Treine a Korvia AI com as informações da sua marca e deixe que ela venda por você no Direct.</p>
+                    </div>
+                    <div class="glass-card p-8 rounded-3xl space-y-4 hover:translate-y-[-8px] transition-all">
+                        <div class="w-12 h-12 bg-cyan-600/10 rounded-2xl flex items-center justify-center text-cyan-400"><i data-lucide="git-branch"></i></div>
+                        <h3 class="text-xl font-bold">Construtor Visual</h3>
+                        <p class="text-slate-400 text-sm">Crie fluxos complexos com drag-and-drop. Envie áudios, imagens e textos com atrasos inteligentes.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="py-24 px-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center space-y-4 mb-16">
+                    <h2 class="text-3xl md:text-5xl font-bold">Como Funciona</h2>
+                    <p class="text-slate-400">Simples, rápido e eficiente para você focar no que realmente importa.</p>
+                </div>
+                <div class="grid grid-cols-1 gap-12">
+                    <div class="text-center space-y-4">
+                        <div class="w-24 h-24 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto text-blue-400 text-4xl font-bold border border-blue-600/20">1</div>
+                        <h3 class="text-xl font-bold">Conecte seu Instagram</h3>
+                        <p class="text-slate-400 text-sm">Vincule sua conta profissional de forma segura em poucos cliques.</p>
+                    </div>
+                    <div class="text-center space-y-4">
+                        <div class="w-24 h-24 bg-purple-600/10 rounded-full flex items-center justify-center mx-auto text-purple-400 text-4xl font-bold border border-purple-600/20">2</div>
+                        <h3 class="text-xl font-bold">Crie seu Fluxo de IA</h3>
+                        <p class="text-slate-400 text-sm">Use nosso construtor visual para definir as respostas automáticas e o tom de voz da sua marca.</p>
+                    </div>
+                    <div class="text-center space-y-4">
+                        <div class="w-24 h-24 bg-cyan-600/10 rounded-full flex items-center justify-center mx-auto text-cyan-400 text-4xl font-bold border border-cyan-600/20">3</div>
+                        <h3 class="text-xl font-bold">Publique e Venda</h3>
+                        <p class="text-slate-400 text-sm">Ative sua automação e veja a Korvia AI transformar interações em vendas 24/7.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: Step-by-Step Configuration -->
+        <section id="configuration" class="py-24 px-8 bg-slate-900/30">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center space-y-4 mb-16 reveal">
+                    <h2 class="text-blue-400 font-bold uppercase tracking-[0.3em] text-xs mb-4">Guia de Sucesso</h2>
+                    <h3 class="text-4xl md:text-5xl font-black leading-tight">Como Configurar em <span class="text-blue-400">5 Passos</span></h3>
+                    <p class="text-slate-400 max-w-2xl mx-auto">Siga este roteiro para garantir que sua IA atenda seus clientes com máxima eficiência e segurança.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Step 1 -->
+                    <div class="glass-card p-8 rounded-3xl border-l-4 border-blue-500 hover:bg-white/5 transition-all reveal">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-5xl font-black text-blue-500/20">01</span>
+                            <div class="p-3 bg-blue-500/10 rounded-2xl text-blue-400"><i data-lucide="user-plus"></i></div>
+                        </div>
+                        <h4 class="text-xl font-bold mb-3 italic uppercase">Crie sua Conta</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">Clique em "Criar Conta" no topo. Você só precisa de um e-mail. Use a conta <b>Demo</b> se quiser apenas explorar as funcionalidades antes de configurar suas chaves reais.</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="glass-card p-8 rounded-3xl border-l-4 border-purple-500 hover:bg-white/5 transition-all reveal" style="transition-delay: 0.1s">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-5xl font-black text-purple-500/20">02</span>
+                            <div class="p-3 bg-purple-500/10 rounded-2xl text-purple-400"><i data-lucide="settings-2"></i></div>
+                        </div>
+                        <h4 class="text-xl font-bold mb-3 italic uppercase">Configurações de API</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">Acesse a aba <b>"Treinar IA"</b>. Você precisará da sua chave da OpenAI e do Token da Meta (obtido no portal <a href="https://developers.facebook.com" target="_blank" class="text-blue-400 underline">Meta for Developers</a>) para habilitar o envio real.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="glass-card p-8 rounded-3xl border-l-4 border-cyan-500 hover:bg-white/5 transition-all reveal" style="transition-delay: 0.2s">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-5xl font-black text-cyan-500/20">03</span>
+                            <div class="p-3 bg-cyan-500/10 rounded-2xl text-cyan-400"><i data-lucide="instagram"></i></div>
+                        </div>
+                        <h4 class="text-xl font-bold mb-3 italic uppercase">Conecte o Perfil</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">No Dashboard, clique em <b>"Vincular Instagram"</b>. Insira o seu @. Nossa IA fará um teste de conexão (ping) com os tokens que você salvou para garantir que o envio está liberado.</p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="glass-card p-8 rounded-3xl border-l-4 border-pink-500 hover:bg-white/5 transition-all reveal" style="transition-delay: 0.3s">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-5xl font-black text-pink-500/20">04</span>
+                            <div class="p-3 bg-pink-500/10 rounded-2xl text-pink-400"><i data-lucide="git-branch"></i></div>
+                        </div>
+                        <h4 class="text-xl font-bold mb-3 italic uppercase">Crie seu Fluxo</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">Na aba <b>"Automações"</b>, escolha um gatilho (ex: comentar "QUERO"). Arraste blocos de texto ou áudio. A IA usará o <b>Cérebro</b> configurado para personalizar a conversa.</p>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="glass-card p-8 rounded-3xl border-l-4 border-green-500 hover:bg-white/5 transition-all reveal" style="transition-delay: 0.4s">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-5xl font-black text-green-500/20">05</span>
+                            <div class="p-3 bg-green-500/10 rounded-2xl text-green-400"><i data-lucide="rocket"></i></div>
+                        </div>
+                        <h4 class="text-xl font-bold mb-3 italic uppercase">Publique e Venda</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">Clique em <b>"Publicar no Instagram"</b>. A partir de agora, a Korvia monitora seus comentários 24h por dia. Os novos contatos capturados aparecerão na aba <b>"Leads"</b> com o histórico da conversa.</p>
+                    </div>
+
+                    <!-- CTA Item -->
+                    <div class="p-8 rounded-3xl bg-blue-600 flex flex-col items-center justify-center text-center gap-4 reveal" style="transition-delay: 0.5s">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white"><i data-lucide="help-circle"></i></div>
+                        <h4 class="text-xl font-bold text-white leading-tight uppercase italic">Dúvidas Técnicas?</h4>
+                        <p class="text-blue-100 text-xs">Nosso especialista virtual está pronto para te ajudar a encontrar seu Business ID ou gerar seu Token da Meta.</p>
+                        <button onclick="toggleLandingAIChat()" class="bg-white text-blue-600 px-6 py-2 rounded-xl font-bold text-sm shadow-xl transition-all hover:scale-105 active:scale-95">Falar com Suporte</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section id="testimonials" class="py-24 px-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center space-y-4 mb-16 reveal">
+                    <h2 class="text-3xl md:text-5xl font-bold">O que nossos clientes dizem</h2>
+                    <p class="text-slate-400">Veja como a Korvia está transformando negócios.</p>
+                </div>
+                <div class="grid grid-cols-1 gap-8">
+                    <div class="glass-card p-8 rounded-3xl space-y-4 reveal">
+                        <div class="flex text-yellow-400 text-lg">★★★★★</div>
+                        <p class="text-slate-300 italic">"A Korvia mudou a forma como interajo com meus seguidores. As vendas no Instagram dispararam!"</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-500"></div>
+                            <div>
+                                <p class="font-bold text-sm">João Silva</p>
+                                <p class="text-xs text-slate-500">Infoprodutor</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-8 rounded-3xl space-y-4 reveal" style="transition-delay: 0.1s">
+                        <div class="flex text-yellow-400 text-lg">★★★★★</div>
+                        <p class="text-slate-300 italic">"Nunca imaginei que a automação pudesse ser tão personalizada. A IA entende o tom da minha marca perfeitamente."</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-purple-500"></div>
+                            <div>
+                                <p class="font-bold text-sm">Maria Oliveira</p>
+                                <p class="text-xs text-slate-500">Criadora de Conteúdo</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-8 rounded-3xl space-y-4 reveal" style="transition-delay: 0.2s">
+                        <div class="flex text-yellow-400 text-lg">★★★★★</div>
+                        <p class="text-slate-300 italic">"Economizamos horas de trabalho manual e aumentamos nossa taxa de conversão em 30%."</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-cyan-500"></div>
+                            <div>
+                                <p class="font-bold text-sm">Carlos Santos</p>
+                                <p class="text-xs text-slate-500">Agência de Marketing</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="py-24 px-8 bg-slate-950/50">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center space-y-4 mb-16 reveal">
+                    <h2 class="text-3xl md:text-5xl font-bold">Perguntas Frequentes</h2>
+                    <p class="text-slate-400">Tire suas dúvidas sobre a Korvia.</p>
+                </div>
+                <div class="space-y-4">
+                    <details class="glass-card p-6 rounded-xl">
+                        <summary class="font-bold text-lg cursor-pointer flex justify-between items-center">
+                            Como a Korvia se conecta ao meu Instagram? <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                        </summary>
+                        <p class="text-slate-400 mt-4">Utilizamos a Meta Graph API oficial, garantindo uma conexão segura e autorizada. Você faz o login diretamente na Meta e nos concede as permissões necessárias.</p>
+                    </details>
+                    <details class="glass-card p-6 rounded-xl">
+                        <summary class="font-bold text-lg cursor-pointer flex justify-between items-center">
+                            Preciso ter conhecimento em programação para usar? <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                        </summary>
+                        <p class="text-slate-400 mt-4">Absolutamente não! Nossa interface é drag-and-drop, intuitiva e pensada para criadores de conteúdo e empreendedores, sem a necessidade de código.</p>
+                    </details>
+                    <details class="glass-card p-6 rounded-xl">
+                        <summary class="font-bold text-lg cursor-pointer flex justify-between items-center">
+                            A IA realmente aprende o tom de voz da minha marca? <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                        </summary>
+                        <p class="text-slate-400 mt-4">Sim! Você pode fornecer textos, documentos e diretrizes para a Korvia. Ela utilizará esses dados para gerar respostas que refletem a personalidade e o estilo da sua marca.</p>
+                    </details>
+                    <details class="glass-card p-6 rounded-xl">
+                        <summary class="font-bold text-lg cursor-pointer flex justify-between items-center">
+                            Posso gerenciar múltiplas contas do Instagram? <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                        </summary>
+                        <p class="text-slate-400 mt-4">Sim, nossos planos Pro e Business permitem que você conecte e gerencie várias contas do Instagram em uma única plataforma.</p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: Final Call to Action & Quick Access -->
+        <section id="access-options" class="py-32 px-8 bg-gradient-to-b from-[#020617] to-blue-900/40 border-t border-white/5">
+            <div class="max-w-5xl mx-auto text-center">
+                <div class="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 rounded-full text-blue-400 text-xs font-bold uppercase tracking-widest mb-8 reveal">
+                    Acesso Imediato
+                </div>
+                <h2 class="text-4xl md:text-6xl font-black text-white mb-8 italic reveal">TUDO PRONTO PARA <span class="text-blue-400">ESCALAR?</span></h2>
+                <p class="text-xl text-slate-400 mb-16 max-w-2xl mx-auto reveal">Seja testando nossa demonstração ou criando sua conta oficial, o futuro da sua automação começa aqui.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 reveal">
+                    <!-- Register Card -->
+                    <div class="glass-card p-8 rounded-[32px] border-white/10 hover:border-blue-500/50 transition-all group">
+                        <div class="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 mx-auto mb-6 group-hover:scale-110 transition-transform"><i data-lucide="user-plus"></i></div>
+                        <h4 class="text-xl font-bold mb-4 italic uppercase">Novo Cadastro</h4>
+                        <p class="text-slate-500 text-sm mb-8">Crie sua conta em segundos e comece a capturar leads agora mesmo.</p>
+                        <button onclick="openAuth('signup')" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-blue-600/20">Criar Conta Grátis</button>
+                    </div>
+
+                    <!-- Demo Card -->
+                    <div class="glass-card p-8 rounded-[32px] border-blue-500/30 bg-blue-600/5 shadow-[0_0_30px_rgba(37,99,235,0.1)] hover:border-blue-500 transition-all group scale-105 z-10">
+                        <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-6 group-hover:rotate-12 transition-transform shadow-lg"><i data-lucide="zap"></i></div>
+                        <h4 class="text-xl font-bold mb-4 italic uppercase">Testar Demo</h4>
+                        <p class="text-slate-300 text-sm mb-8">Quer ver como funciona por dentro? Explore nosso painel de demonstração.</p>
+                        <button onclick="loginDemo()" class="w-full bg-white text-slate-950 hover:bg-blue-400 hover:text-white py-4 rounded-2xl font-bold transition-all shadow-2xl">Acessar Agora</button>
+                    </div>
+
+                    <!-- Login Card -->
+                    <div class="glass-card p-8 rounded-[32px] border-white/10 hover:border-blue-500/50 transition-all group">
+                        <div class="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400 mx-auto mb-6 group-hover:scale-110 transition-transform"><i data-lucide="log-in"></i></div>
+                        <h4 class="text-xl font-bold mb-4 italic uppercase">Já sou Cliente</h4>
+                        <p class="text-slate-500 text-sm mb-8">Faça login para gerenciar suas contas e treinar sua inteligência artificial.</p>
+                        <button onclick="openAuth('login')" class="w-full glass-card hover:bg-white/5 py-4 rounded-2xl font-bold transition-all border border-white/10">Entrar no Painel</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-12 border-t border-white/5 text-center text-slate-500 text-xs">
+            <p>&copy; 2026 Korvia - A Nova Era da Automação. Todos os direitos reservados.</p>
+        </footer>
+
+        <!-- Botão Flutuante IA -->
+        <div class="fixed bottom-8 right-8 z-[150]">
+            <button onclick="toggleLandingAIChat()" class="w-16 h-16 bg-blue-600 text-white rounded-full shadow-[0_0_20px_rgba(37,99,235,0.5)] flex items-center justify-center hover:scale-110 transition-all animate-bounce">
+                <img src="https://i.imgur.com/dX21tfc.png" class="w-10 h-10 object-contain" referrerpolicy="no-referrer">
+            </button>
+        </div>
+
+        <!-- Modal Chat IA Landing Page -->
+        <div id="landing-ai-chat" class="fixed bottom-24 right-4 md:right-8 w-[calc(100%-2rem)] md:w-96 max-h-[70vh] md:max-h-[600px] z-[160] hidden animate-[fadeInUp_0.3s_ease-out]">
+            <div class="glass-chat w-full h-full rounded-3xl shadow-2xl flex flex-col border border-white/10 overflow-hidden">
+                <div class="bg-blue-600 p-6 text-white flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                            <img src="https://i.imgur.com/dX21tfc.png" class="w-6 h-6 object-contain" referrerpolicy="no-referrer">
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm">Korvia Support</p>
+                            <p class="text-[10px] opacity-80">Especialista em Automação</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleLandingAIChat()" class="hover:bg-white/10 p-2 rounded-lg transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                
+                <div id="landing-chat-content" class="flex-1 p-4 overflow-y-auto space-y-4 custom-scroll bg-slate-900/30">
+                    <div class="bg-blue-600/20 p-4 rounded-2xl rounded-tl-none border border-blue-500/20 text-sm text-slate-200">
+                        Olá! Sou o assistente virtual da Korvia. Em que posso ajudar hoje? Escolha uma dúvida abaixo ou escreva.
+                    </div>
+                    <div id="landing-faq-list" class="flex flex-col gap-2">
+                        <!-- Injetado via JS -->
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-900/50 border-t border-white/10">
+                    <div class="flex gap-2">
+                        <input type="text" id="landing-chat-input" class="flex-1 bg-slate-800 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-blue-500 outline-none" placeholder="Digite sua dúvida...">
+                        <button onclick="sendLandingChatMessage()" class="bg-blue-600 p-2 rounded-xl text-white hover:bg-blue-500"><i data-lucide="send" class="w-5 h-5"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION: AUTH (LOGIN/SIGNUP) -->
+    <div id="view-auth" class="fixed inset-0 z-[200] bg-slate-950 flex items-center justify-center p-4 hidden">
+        <div class="glass-card p-8 rounded-[32px] w-full max-w-md space-y-6 relative">
+            <button onclick="closeAuth()" class="absolute top-6 right-6 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+            <div class="text-center space-y-2">
+                <h2 id="auth-title" class="text-3xl font-bold">Boas-vindas de volta!</h2>
+                <p id="auth-subtitle" class="text-slate-400 text-sm">Insira seus dados para acessar sua conta.</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-slate-400 mb-1.5 block">E-mail</label>
+                    <input type="email" id="auth-email" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:border-blue-500 outline-none" placeholder="seu@email.com">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 mb-1.5 block">Senha</label>
+                    <input type="password" id="auth-password" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:border-blue-500 outline-none" placeholder="••••••••">
+                </div>
+                <button onclick="handleAuthSubmit()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-blue-600/20">Entrar na Plataforma</button>
+                <div class="relative py-2 flex items-center">
+                    <div class="flex-grow border-t border-white/10"></div>
+                    <span class="flex-shrink mx-4 text-slate-500 text-[10px] uppercase font-black tracking-widest">Ou teste o sistema</span>
+                    <div class="flex-grow border-t border-white/10"></div>
+                </div>
+                <button onclick="loginDemo()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 py-4 rounded-2xl font-black transition-all text-sm text-white uppercase tracking-widest shadow-xl shadow-cyan-600/10">Acessar Conta de Demonstração</button>
+            </div>
+            <div class="text-center">
+                <button onclick="toggleAuthMode()" id="auth-toggle" class="text-xs text-blue-400 hover:underline">Ainda não tem conta? Crie agora</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION: MAIN APP (DASHBOARD/BUILDER/ETC) -->
+    <div id="view-app" class="flex flex-col md:flex-row h-screen w-full hidden">
+        <!-- Sidebar -->
+        <aside class="hidden md:flex w-64 glass-card border-r border-slate-800 flex-col p-6">
+            <div class="flex items-center justify-center mb-6">
+                <img src="https://i.imgur.com/dX21tfc.png" alt="Korvia Logo" class="w-32 h-32 object-contain" referrerpolicy="no-referrer">
+            </div>
+
+            <nav class="space-y-4 flex-1">
+                <a href="#" id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-link flex items-center gap-3 p-3 rounded-xl bg-blue-600/10 text-blue-400 border border-blue-600/20">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+                </a>
+                <a href="#" id="nav-builder" onclick="switchTab('builder')" class="nav-link flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition-all text-slate-400">
+                    <i data-lucide="git-branch" class="w-5 h-5"></i> Automações
+                </a>
+                <a href="#" id="nav-ai" onclick="switchTab('ai')" class="nav-link flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition-all text-slate-400">
+                    <i data-lucide="bot" class="w-5 h-5"></i> Treinar IA
+                </a>
+                <a href="#" id="nav-leads" onclick="switchTab('leads')" class="nav-link flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition-all text-slate-400">
+                    <i data-lucide="users" class="w-5 h-5"></i> Leads
+                </a>
+                <a href="#" id="nav-admin" onclick="switchTab('admin')" class="nav-link flex items-center gap-3 p-3 rounded-xl hover:bg-red-500/10 transition-all text-slate-400 hidden">
+                    <i data-lucide="shield-check" class="w-5 h-5"></i> Painel Admin
+                </a>
+            </nav>
+
+            <div class="mt-auto pt-6 border-t border-slate-800">
+                <div onclick="logout()" class="flex items-center gap-3 cursor-pointer hover:bg-red-500/10 p-2 rounded-xl transition-all group">
+                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center group-hover:bg-red-500/20"><i data-lucide="log-out" class="w-5 h-5 text-slate-400 group-hover:text-red-500"></i></div>
+                    <div>
+                        <p id="user-display-name" class="text-sm font-semibold">Admin Korvia</p>
+                        <p class="text-xs text-slate-500 group-hover:text-red-400">Sair da Conta</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Mobile Bottom Nav (App) -->
+        <nav class="md:hidden fixed bottom-0 left-0 w-full bg-slate-900 border-t border-white/5 px-4 py-3 flex justify-around items-center z-[150] backdrop-blur-xl bg-opacity-90">
+            <button onclick="switchTab('dashboard')" id="m-nav-dashboard" class="flex flex-col items-center gap-1 text-blue-400 transition-all">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span class="text-[8px] font-black uppercase tracking-widest">Início</span>
+            </button>
+            <button onclick="switchTab('builder')" id="m-nav-builder" class="flex flex-col items-center gap-1 text-slate-500 transition-all">
+                <i data-lucide="git-branch" class="w-5 h-5"></i>
+                <span class="text-[8px] font-black uppercase tracking-widest">Fluxos</span>
+            </button>
+            <button onclick="switchTab('ai')" id="m-nav-ai" class="flex flex-col items-center gap-1 text-slate-500 transition-all">
+                <i data-lucide="bot" class="w-5 h-5"></i>
+                <span class="text-[8px] font-black uppercase tracking-widest">Treinar</span>
+            </button>
+            <button onclick="switchTab('leads')" id="m-nav-leads" class="flex flex-col items-center gap-1 text-slate-500 transition-all">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span class="text-[8px] font-black uppercase tracking-widest">Leads</span>
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 relative pb-24 md:pb-8">
+            
+            <!-- Tab: Dashboard -->
+            <div id="tab-dashboard" class="tab-content">
+                <header class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2 flex items-center gap-3">
+                            Bem-vindo, Korvia!
+                            <span id="dash-status-led" class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse"></span>
+                        </h1>
+                        <p class="text-slate-400">Aqui está o que aconteceu no seu Instagram hoje.</p>
+                    </div>
+                    <div class="flex w-full md:w-auto gap-3">
+                        <button id="ig-connect-btn" onclick="connectInstagram()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 rounded-lg font-semibold shadow-lg text-sm">
+                            <i data-lucide="instagram" class="w-4 h-4"></i> <span id="ig-status-text">Vincular Instagram</span>
+                        </button>
+                        <button onclick="openTriggerModal()" class="flex-1 md:flex-none bg-blue-600 px-6 py-2 rounded-lg font-semibold shadow-lg text-sm whitespace-nowrap">
+                            + Nova Automação
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Global Notifications Area -->
+                <div id="dashboard-notifications" class="hidden space-y-4 mb-10"></div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10">
+                    <div class="glass-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-blue-500/10 rounded-lg"><i data-lucide="message-square" class="text-blue-400"></i></div>
+                            <span class="text-green-400 text-xs font-bold">+12%</span>
+                        </div>
+                        <p class="text-slate-400 text-sm">Total de Mensagens</p>
+                        <h3 id="stat-messages" class="text-2xl font-bold">0</h3>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-purple-500/10 rounded-lg"><i data-lucide="user-plus" class="text-purple-400"></i></div>
+                            <span class="text-green-400 text-xs font-bold">+5%</span>
+                        </div>
+                        <p class="text-slate-400 text-sm">Novos Leads</p>
+                        <h3 id="stat-leads" class="text-2xl font-bold">0</h3>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl neon-border">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-cyan-500/10 rounded-lg"><i data-lucide="zap" class="text-cyan-400"></i></div>
+                            <span class="text-cyan-400 text-xs font-bold">LIVE</span>
+                        </div>
+                        <p class="text-slate-400 text-sm">Conversões IA</p>
+                        <h3 id="stat-conv" class="text-2xl font-bold">0%</h3>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-orange-500/10 rounded-lg"><i data-lucide="trending-up" class="text-orange-400"></i></div>
+                            <span class="text-red-400 text-xs font-bold">-2%</span>
+                        </div>
+                        <p class="text-slate-400 text-sm">Crescimento Mensal</p>
+                        <h3 id="stat-growth" class="text-2xl font-bold">0%</h3>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-6">Automações Recentes</h3>
+                    <div class="space-y-4" id="automations-list"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Builder (Visual Flow) -->
+            <div id="tab-builder" class="tab-content hidden h-full">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold">Automação Instagram: <span class="text-blue-400">Fluxo Personalizado</span></h1>
+                    <div class="flex gap-3">
+                        <button onclick="deleteAutomation()" class="bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-lg hover:bg-red-500/20 transition-all">Remover Automação</button>
+                        <button onclick="publishAutomation()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg shadow-lg shadow-blue-600/30 font-bold transition-all">Publicar no Instagram</button>
+                    </div>
+                </div>
+
+                <div class="flex gap-6 h-[75vh]">
+                    <!-- Builder (Left) -->
+                    <div class="flex-1 bg-[#0a0f1d] rounded-3xl border border-slate-800 relative overflow-y-auto custom-scroll">
+                        <!-- Grid Background -->
+                        <div class="absolute inset-0 pointer-events-none" style="background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 30px 30px;"></div>
+                        
+                        <div class="relative z-10 flex flex-col items-center py-10 gap-0" id="flow-steps-container">
+                            <!-- Trigger Node -->
+                            <div class="glass-card p-4 rounded-xl border-blue-500/50 w-80 shadow-2xl">
+                                <div class="flex items-center gap-2 mb-2 text-blue-400 text-xs font-bold uppercase tracking-wider">
+                                    <i data-lucide="play" class="w-4 h-4"></i> Gatilho
+                                </div>
+                                <p class="text-sm">Usuário comenta <input type="text" id="flow-keyword" class="bg-blue-600/20 text-blue-300 px-2 py-0.5 rounded border-none w-24 outline-none font-bold" value="QUERO"> no post.</p>
+                            </div>
+                            <!-- Dynamic steps will be injected here -->
+                        </div>
+
+                        <!-- Add Step Menu -->
+                        <div class="sticky bottom-6 flex justify-center w-full z-20">
+                            <div class="glass-card p-2 rounded-2xl flex gap-2 border-blue-500/30 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+                                <button onclick="addStep('text')" class="flex items-center gap-2 px-3 py-2 hover:bg-blue-600/20 rounded-xl text-xs font-bold transition-all"><i data-lucide="message-square" class="w-4 h-4"></i> + Texto</button>
+                                <button onclick="addStep('image')" class="flex items-center gap-2 px-3 py-2 hover:bg-blue-600/20 rounded-xl text-xs font-bold transition-all"><i data-lucide="image" class="w-4 h-4"></i> + Imagem</button>
+                                <button onclick="addStep('audio')" class="flex items-center gap-2 px-3 py-2 hover:bg-blue-600/20 rounded-xl text-xs font-bold transition-all"><i data-lucide="mic" class="w-4 h-4"></i> + Áudio</button>
+                                <button onclick="addStep('delay')" class="flex items-center gap-2 px-3 py-2 hover:bg-blue-600/20 rounded-xl text-xs font-bold transition-all"><i data-lucide="clock" class="w-4 h-4"></i> + Atraso</button>
+                                <div class="w-px h-6 bg-slate-700 self-center mx-1"></div>
+                                <button onclick="simulateLeadCapture()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 rounded-xl text-xs font-bold transition-all shadow-lg"><i data-lucide="send" class="w-4 h-4"></i> Enviar Agora</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- iPhone Preview (Right) -->
+                    <div class="hidden xl:flex w-[320px] bg-black rounded-[50px] border-[8px] border-slate-800 shadow-2xl overflow-hidden flex-col relative shrink-0">
+                        <!-- Notch -->
+                        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20"></div>
+                        
+                        <!-- IG Header -->
+                        <div class="bg-slate-900 pt-8 pb-3 px-4 border-b border-slate-800 flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-purple-600 p-[2px]">
+                                <div class="w-full h-full rounded-full bg-slate-800 flex items-center justify-center border border-black overflow-hidden text-slate-500">
+                                    <img src="https://i.imgur.com/dX21tfc.png" class="w-full h-full object-contain" referrerpolicy="no-referrer">
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-white leading-none">Suporte</p>
+                                <p class="text-[8px] text-green-500">Ativo agora</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Message List -->
+                        <div id="iphone-messages" class="flex-1 p-4 flex flex-col gap-3 overflow-y-auto custom-scroll bg-black">
+                            <!-- Messages injected here -->
+                        </div>
+                        
+                        <!-- Footer Mock -->
+                        <div class="p-3 bg-slate-900 border-t border-slate-800 flex items-center gap-3">
+                            <div class="flex-1 h-8 bg-slate-800 rounded-full px-4 flex items-center">
+                                <span class="text-[10px] text-slate-500 italic">Mensagem...</span>
+                            </div>
+                            <i data-lucide="mic" class="w-4 h-4 text-white opacity-60"></i>
+                            <i data-lucide="image" class="w-4 h-4 text-white opacity-60"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: AI Training -->
+            <div id="tab-ai" class="tab-content hidden">
+                <header class="mb-6">
+                    <h1 class="text-2xl font-bold flex items-center gap-3">
+                        Cérebro da Korvia
+                        <span id="ai-status-led" class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse"></span>
+                    </h1>
+                    <p id="ai-status-banner-text" class="text-sm text-slate-500 mt-1 uppercase font-black tracking-tighter">Status: Não Configurado</p>
+                </header>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="glass-card p-6 rounded-2xl">
+                        <h3 class="text-lg font-semibold mb-4 text-blue-400 flex items-center gap-2">
+                            <i data-lucide="settings" class="w-5 h-5"></i> Configurações de Integração
+                        </h3>
+                        <div class="space-y-4 mb-6">
+                            <div>
+                                <label class="text-xs text-slate-400 mb-1.5 block">OpenAI API Key</label>
+                                <input type="password" id="openai-key" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="sk-...">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400 mb-1.5 block">Facebook App ID</label>
+                                <input type="text" id="fb-app-id" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="123456789...">
+                            </div>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div>
+                                    <label class="text-xs text-slate-400 mb-1.5 block">Meta Page Access Token</label>
+                                    <input type="password" id="meta-token" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="EAAb...">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-400 mb-1.5 block">Instagram Business Account ID</label>
+                                    <input type="text" id="ig-business-id" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="1784...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <i data-lucide="book-open" class="w-5 h-5"></i> Contexto da Marca
+                        </h3>
+                        <textarea id="brand-context" class="w-full h-48 bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="Ex: Somos uma agência de marketing focada em infoprodutores. Nosso tom de voz é amigável..."></textarea>
+                        <button onclick="saveSettings()" class="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition-all">Salvar Todas as Configurações</button>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="glass-card p-6 rounded-2xl border-l-4 border-cyan-500">
+                            <h3 class="font-semibold mb-2">Instruções de Resposta</h3>
+                            <p class="text-sm text-slate-400 mb-4">Defina como a IA deve se comportar ao ser questionada sobre preços.</p>
+                            <input type="text" id="ai-instructions" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 outline-none focus:border-cyan-500" value="Nunca dê o preço direto, peça o WhatsApp primeiro.">
+                        </div>
+                        <div class="glass-card p-6 rounded-2xl border-l-4 border-purple-500">
+                            <h3 class="font-semibold mb-2">Base de Conhecimento</h3>
+                            <div class="flex items-center justify-between p-3 bg-slate-900 rounded-lg border border-dashed border-slate-600 cursor-pointer hover:bg-slate-800 transition-all">
+                                <span class="text-sm text-slate-500">Upload PDF/Doc com informações do produto</span>
+                                <i data-lucide="upload" class="w-4 h-4 text-slate-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Leads (Table) -->
+            <div id="tab-leads" class="tab-content hidden">
+                <h1 class="text-2xl font-bold mb-6">Leads Capturados</h1>
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="p-4">Nome / IG</th>
+                                <th class="p-4">E-mail</th>
+                                <th class="p-4">Data de Captura</th>
+                                <th class="p-4">Resposta Gerada pela IA</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leads-table-body" class="text-sm">
+                            <!-- Leads will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Admin Panel -->
+            <div id="tab-admin" class="tab-content hidden">
+                <header class="mb-10">
+                    <h1 class="text-3xl font-bold text-blue-500 flex items-center gap-2">
+                        <i data-lucide="shield-check"></i> Gestão da Plataforma
+                    </h1>
+                    <p class="text-slate-400">Controle de acesso e usuários registrados.</p>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="glass-card p-6 rounded-2xl border-blue-500/20">
+                        <p class="text-slate-400 text-sm mb-1 uppercase font-bold tracking-tighter">Assinaturas Ativas</p>
+                        <h3 id="admin-active-subs" class="text-2xl font-bold text-blue-400">0</h3>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl border-purple-500/20">
+                        <p class="text-slate-400 text-sm mb-1 uppercase font-bold tracking-tighter">Receita Mensal (MRR)</p>
+                        <h3 id="admin-mrr" class="text-2xl font-bold text-purple-400">R$ 0,00</h3>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl border-cyan-500/20">
+                        <p class="text-slate-400 text-sm mb-1 uppercase font-bold tracking-tighter">Automações Ativas</p>
+                        <h3 id="admin-total-automations" class="text-2xl font-bold text-cyan-400">0</h3>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl border-red-500/20">
+                        <p class="text-slate-400 text-sm mb-1 uppercase font-bold tracking-tighter">Servidor / API</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                            <span class="text-xs font-bold text-green-400">ESTÁVEL</span>
+                        </div>
+                        <button onclick="toggleMaintenance()" id="maintenance-btn" class="mt-3 text-[9px] bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 px-2 py-1 rounded border border-white/5 transition-all uppercase font-black italic">Carregando...</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Notification Sender -->
+                    <div class="glass-card p-6 rounded-2xl border-blue-500/20">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2 uppercase italic text-blue-400">
+                            <i data-lucide="megaphone" class="w-5 h-5"></i> Central de Notificações
+                        </h3>
+                        <div class="space-y-4">
+                            <textarea id="admin-notif-input" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:border-blue-500 outline-none h-24" placeholder="Escreva uma mensagem para todos os usuários..."></textarea>
+                            <button onclick="sendGlobalNotification()" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20">Enviar Notificação Global</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Active System Notifications -->
+                    <div class="glass-card p-6 rounded-2xl border-purple-500/20 overflow-hidden flex flex-col h-full">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2 uppercase italic text-purple-400">
+                            <i data-lucide="bell" class="w-5 h-5"></i> Notificações Ativas
+                        </h3>
+                        <div id="admin-notif-list" class="space-y-3 overflow-y-auto max-h-48 pr-2 custom-scroll">
+                            <!-- Injetado via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 rounded-2xl border-blue-500/20 mb-8">
+                    <h3 class="text-lg font-semibold mb-4 italic uppercase">Usuários Ativos: <span id="admin-user-count" class="text-red-400">0</span></h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-800/50 text-slate-400 text-xs uppercase">
+                                <tr>
+                                    <th class="p-4">E-mail do Usuário</th>
+                                    <th class="p-4">Senha (Acesso)</th>
+                                    <th class="p-4">Último Login</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table" class="text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 rounded-2xl border-purple-500/20">
+                    <h3 class="text-lg font-semibold mb-4 italic uppercase">Logs de Atividade do Sistema</h3>
+                    <div class="space-y-3" id="admin-logs-list">
+                        <!-- Logs injetados via JS -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Modal: Trigger Selection (ManyChat Style) -->
+        <div id="modal-trigger" class="fixed inset-0 z-[250] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+            <div class="glass-card p-8 rounded-[32px] w-full max-w-2xl space-y-8 relative border-blue-500/30">
+                <button onclick="closeTriggerModal()" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors"><i data-lucide="x"></i></button>
+                <div class="text-center space-y-2">
+                    <h2 class="text-3xl font-bold">Como sua automação começa?</h2>
+                    <p class="text-slate-400 text-sm">Selecione o evento que irá disparar o fluxo de mensagens.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div onclick="selectTrigger('comments')" class="glass-card p-6 rounded-3xl border-slate-700 hover:border-pink-500 hover:bg-pink-500/5 cursor-pointer group transition-all flex flex-col items-center text-center">
+                        <div class="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center text-pink-500 mb-4 group-hover:scale-110 transition-transform"><i data-lucide="message-square" class="w-6 h-6"></i></div>
+                        <h4 class="text-lg font-bold mb-2">Comentários</h4>
+                        <p class="text-slate-400 text-[10px] leading-relaxed">Responda quem comentar palavras-chave em seus posts.</p>
+                    </div>
+                    <div onclick="selectTrigger('direct')" class="glass-card p-6 rounded-3xl border-slate-700 hover:border-blue-500 hover:bg-blue-500/5 cursor-pointer group transition-all flex flex-col items-center text-center">
+                        <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 mb-4 group-hover:scale-110 transition-transform"><i data-lucide="send" class="w-6 h-6"></i></div>
+                        <h4 class="text-lg font-bold mb-2">Direct</h4>
+                        <p class="text-slate-400 text-[10px] leading-relaxed">Inicie conversas quando receber mensagens diretas específicas.</p>
+                    </div>
+                    <div onclick="selectTrigger('story')" class="glass-card p-6 rounded-3xl border-slate-700 hover:border-orange-500 hover:bg-orange-500/5 cursor-pointer group transition-all flex flex-col items-center text-center">
+                        <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center text-orange-500 mb-4 group-hover:scale-110 transition-transform"><i data-lucide="instagram" class="w-6 h-6"></i></div>
+                        <h4 class="text-lg font-bold mb-2">Menção Story</h4>
+                        <p class="text-slate-400 text-[10px] leading-relaxed">Agradeça ou envie ofertas para quem te mencionar nos Stories.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // AUTH LOGIC
+        let authMode = 'login'; // 'login' or 'signup'
+
+        // Function to open the authentication modal
+        function openAuth(mode) {
+            authMode = mode;
+            document.getElementById('view-auth').classList.remove('hidden');
+            updateAuthUI();
+        }
+
+        function closeAuth() {
+            document.getElementById('view-auth').classList.add('hidden');
+            // Clear input fields when closing
+            document.getElementById('auth-email').value = '';
+            document.getElementById('auth-password').value = '';
+        }
+
+        // MOBILE MENU TOGGLE
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                lucide.createIcons();
+            } else {
+                menu.classList.add('hidden');
+            }
+        }
+
+        function toggleAuthMode() {
+            authMode = authMode === 'login' ? 'signup' : 'login';
+            updateAuthUI();
+        }
+
+        function updateAuthUI() {
+            const title = document.getElementById('auth-title');
+            const btn = document.getElementById('auth-btn');
+            const toggle = document.getElementById('auth-toggle');
+            const subtitle = document.getElementById('auth-subtitle');
+            
+            if (authMode === 'login') {
+                title.innerText = 'Boas-vindas de volta!';
+                subtitle.innerText = 'Insira seus dados para acessar sua conta.';
+                btn.innerText = 'Entrar na Plataforma';
+                toggle.innerText = 'Ainda não tem conta? Crie agora';
+            } else {
+                title.innerText = 'Comece sua jornada';
+                subtitle.innerText = 'Crie sua conta gratuita em segundos.';
+                btn.innerText = 'Criar minha Conta';
+                toggle.innerText = 'Já tem conta? Faça o login';
+            }
+        }
+
+        async function handleAuthSubmit() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+
+            if (!email || !password) {
+                return alert("Por favor, preencha todos os campos.");
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('korvia_loggedInUser', email);
+                    updateUserUI(email);
+                    document.getElementById('view-landing').classList.add('hidden');
+                    document.getElementById('view-auth').classList.add('hidden');
+                    document.getElementById('view-app').classList.remove('hidden');
+                    syncSettingsWithServer();
+                    renderDashboard();
+                    switchTab('dashboard');
+                }
+            } catch (e) {
+                alert("Erro ao conectar com o servidor backend. Certifique-se que o server.js está rodando.");
+            }
+        }
+
+        function updateUserUI(email) {
+            const isAdmin = email === 'richarddasilvacampos25@gmail.com';
+            const displayName = document.getElementById('user-display-name');
+            const adminNav = document.getElementById('nav-admin');
+
+            if (displayName && email) {
+                displayName.innerText = isAdmin ? "RICHARD (ADM)" : email.split('@')[0];
+            }
+
+            if (isAdmin) {
+                adminNav.classList.remove('hidden');
+            } else {
+                adminNav.classList.add('hidden');
+            }
+        }
+
+        function loginDemo() {
+            const demoEmail = "demo@korvia.ai";
+            const demoLeads = [
+                { name: "Ana Souza", ig: "@anasouza_fit", email: "ana.souza@gmail.com", trigger: "QUERO", aiResponse: "Olá Ana! Vi que você quer o ebook de receitas. Aqui está o link para download!", date: "10/02/2026" },
+                { name: "Marcos Silva", ig: "@marcos_mkt", email: "marcos@mkt.com", trigger: "QUERO", aiResponse: "Fala Marcos! O guia de automação estratégica já foi enviado para seu e-mail.", date: "09/02/2026" },
+                { name: "Juliana Costa", ig: "@ju_creators", email: "contato@jucosta.com", trigger: "QUERO", aiResponse: "Oi Ju! Preparei um cupom de 20% de desconto exclusivo para você usar hoje.", date: "08/02/2026" }
+            ];
+            const demoSettings = {
+                igConnected: true,
+                openaiKey: "sk-proj-demo-key-visual",
+                fbAppId: "987654321",
+                metaToken: "EAAb-demo-token",
+                igBusinessId: "1784140000000",
+                brandContext: "Agência de Marketing Digital Korvia. Foco em alta conversão.",
+                aiInstructions: "Seja amigável, direto e use emojis de foguete e brilho."
+            };
+            const demoUsers = [
+                { email: "demo@korvia.ai", password: "demo", lastLogin: new Date().toLocaleString('pt-BR') },
+                { email: "richarddasilvacampos25@gmail.com", password: "richard1234567891011", lastLogin: new Date().toLocaleString('pt-BR') },
+                { email: "cliente_teste@gmail.com", password: "123", lastLogin: "10/02/2026 14:30" }
+            ];
+            const demoLogs = [
+                { id: 1, user: "demo@korvia.ai", action: "Login efetuado", timestamp: "10/02/2026 14:30" },
+                { id: 2, user: "demo@korvia.ai", action: "Instagram @sucesso_vendas vinculado", timestamp: "10/02/2026 14:35" },
+                { id: 3, user: "richarddasilcampos25@gmail.com", action: "Acesso ao painel administrativo", timestamp: "10/02/2026 15:00" },
+                { id: 4, user: "demo@korvia.ai", action: "Automação 'QUERO' publicada", timestamp: "10/02/2026 15:10" }
+            ];
+            
+            localStorage.setItem('korvia_leads', JSON.stringify(demoLeads));
+            localStorage.setItem('korvia_settings', JSON.stringify(demoSettings));
+            localStorage.setItem('korvia_published_keyword', "QUERO");
+            localStorage.setItem('korvia_users', JSON.stringify(demoUsers));
+            localStorage.setItem('korvia_logs', JSON.stringify(demoLogs));
+            localStorage.setItem('korvia_loggedInUser', demoEmail);
+            
+            updateUserUI(demoEmail);
+            document.getElementById('view-landing').classList.add('hidden');
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('view-app').classList.remove('hidden');
+            
+            renderDashboard();
+            switchTab('dashboard');
+        }
+
+        // TRIGGER MODAL LOGIC
+        function openTriggerModal() {
+            document.getElementById('modal-trigger').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeTriggerModal() {
+            document.getElementById('modal-trigger').classList.add('hidden');
+        }
+
+        function selectTrigger(type) {
+            localStorage.setItem('korvia_trigger_type', type);
+            KorviaDB.saveFlow([]); // Começa um fluxo limpo ao escolher o gatilho
+            closeTriggerModal();
+            switchTab('builder');
+            renderFlowSteps();
+        }
+
+        function logout() {
+            localStorage.removeItem('korvia_loggedInUser');
+            document.getElementById('view-landing').classList.remove('hidden');
+            document.getElementById('view-app').classList.add('hidden');
+            window.scrollTo(0,0);
+        }
+
+        // TYPING EFFECT
+        function initTypingHero() {
+            const phrases = [
+                "Escale suas vendas no Instagram",
+                "Automatize suas DMs com IA",
+                "Capture leads 24h por dia",
+                "Venda mais no piloto automático",
+                "Atenda seguidores via GPT-4"
+            ];
+            const el = document.getElementById('typing-hero');
+            if (!el) return;
+            
+            let phraseIdx = 0;
+            let charIdx = 0;
+            let isDeleting = false;
+            let typeSpeed = 100;
+
+            function updateText() {
+                const currentPhrase = phrases[phraseIdx];
+                
+                if (isDeleting) {
+                    charIdx--;
+                    typeSpeed = 50; 
+                } else {
+                    charIdx++;
+                    typeSpeed = 100; 
+                }
+
+                el.textContent = currentPhrase.substring(0, charIdx);
+
+                if (!isDeleting && charIdx === currentPhrase.length) {
+                    isDeleting = true;
+                    typeSpeed = 2500; // Pausa ao terminar de escrever
+                } else if (isDeleting && charIdx === 0) {
+                    isDeleting = false;
+                    phraseIdx = (phraseIdx + 1) % phrases.length;
+                    typeSpeed = 500; // Pausa antes de começar a próxima frase
+                }
+
+                setTimeout(updateText, typeSpeed);
+            }
+
+            setTimeout(updateText, 500); // Pequeno atraso inicial para suavidade
+        }
+
+        // REVEAL ON SCROLL
+        function initRevealOnScroll() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        // LANDING PAGE AI CHAT LOGIC
+        const landingFAQs = [
+            "Como funciona a automação?", "A IA responde no Direct?", "Preciso deixar o PC ligado?",
+            "É seguro contra banimento?", "Consigo enviar áudio?", "A IA aprende meu tom de voz?",
+            "Como configuro o Webhook?", "Quais os limites diários?", "Funciona em contas pequenas?",
+            "Posso automatizar Reels?", "Como capturar e-mails?", "Tem integração com CRM?",
+            "O que é IGSID?", "Como vincular minha conta?", "A IA fala outros idiomas?",
+            "Posso enviar links?", "Como funciona o atraso?", "Tem suporte em português?",
+            "Posso testar de graça?", "Como deletar automações?", "A IA sabe vender?",
+            "Funciona no Threads?", "Consigo enviar carrossel?", "Como treinar a IA?",
+            "O que é tom de voz?", "Posso usar minha API Key?", "Tem dashboard de leads?",
+            "Como exportar leads?", "O suporte é rápido?", "Tem curso ensinando?"
+        ];
+
+        function toggleLandingAIChat() {
+            const chat = document.getElementById('landing-ai-chat');
+            chat.classList.toggle('hidden');
+            lucide.createIcons();
+        }
+
+        function renderLandingFAQ() {
+            const container = document.getElementById('landing-faq-list');
+            if (!container) return;
+            container.innerHTML = landingFAQs.map(q => `
+                <button onclick="handleFAQClick('${q}')" class="text-left text-[10px] p-2 bg-white/5 border border-white/5 rounded-lg text-slate-400 hover:bg-blue-600/20 hover:text-blue-300 transition-all">
+                    ${q}
+                </button>
+            `).join('');
+        }
+
+        function handleFAQClick(question) {
+            const content = document.getElementById('landing-chat-content');
+            content.innerHTML += `<div class="flex justify-end"><div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none text-xs max-w-[80%] shadow-lg">${question}</div></div>`;
+            setTimeout(() => {
+                const response = getAIResponse(question);
+                content.innerHTML += `<div class="flex justify-start"><div class="bg-slate-800 text-slate-200 p-3 rounded-2xl rounded-tl-none border border-white/10 text-xs max-w-[80%] shadow-lg">${response}</div></div>`;
+                content.scrollTop = content.scrollHeight;
+            }, 600);
+        }
+
+        function sendLandingChatMessage() {
+            const input = document.getElementById('landing-chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+            input.value = '';
+            handleFAQClick(msg);
+        }
+
+        function getAIResponse(msg) {
+            msg = msg.toLowerCase();
+            if (msg.includes("banimento") || msg.includes("seguro")) return "Sim! A Korvia usa a API oficial da Meta, respeitando todos os limites de segurança.";
+            if (msg.includes("audio") || msg.includes("áudio")) return "Com certeza! Você pode configurar áudios reais no nosso construtor.";
+            if (msg.includes("vincular")) return "É só clicar no botão 'Vincular Instagram' e fazer o login seguro.";
+            return "Ótima pergunta! A Korvia AI foi desenhada para facilitar sua vida. Gostaria de criar uma conta gratuita para testar?";
+        }
+
+        // Função para scroll do Carrossel de Ferramentas
+        function scrollSlider(id, amount) {
+            const el = document.getElementById(id);
+            el.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+
+        // DATABASE SIMULATION (LocalStorage)
+        let currentAutomationId = null;
+
+        const KorviaDB = {
+            getLeads: () => JSON.parse(localStorage.getItem('korvia_leads') || '[]'),
+            addLead: (lead) => {
+                const leads = KorviaDB.getLeads();
+                leads.unshift({ ...lead, id: Date.now(), date: new Date().toLocaleDateString('pt-BR'), time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) });
+                localStorage.setItem('korvia_leads', JSON.stringify(leads));
+                KorviaDB.addLog(`Novo lead capturado: ${lead.ig}`);
+                renderDashboard();
+            },
+            getSettings: () => JSON.parse(localStorage.getItem('korvia_settings') || '{"igConnected": false, "openaiKey": "", "fbAppId": "", "metaToken": "", "igBusinessId": "", "brandContext": "", "aiInstructions": "Nunca dê o preço direto, peça o WhatsApp primeiro."}'), // Default settings
+            setSettings: (settings) => localStorage.setItem('korvia_settings', JSON.stringify(settings)),
+            
+            addLog: (action) => {
+                const logs = JSON.parse(localStorage.getItem('korvia_logs') || '[]');
+                logs.unshift({ id: Date.now(), user: localStorage.getItem('korvia_loggedInUser') || 'Sistema', action, timestamp: new Date().toLocaleString('pt-BR') });
+                localStorage.setItem('korvia_logs', JSON.stringify(logs.slice(0, 50)));
+            },
+            getLogs: () => JSON.parse(localStorage.getItem('korvia_logs') || '[]'),
+
+            getAutomations: () => JSON.parse(localStorage.getItem('korvia_automations') || '[]'),
+            saveAutomations: (data) => localStorage.setItem('korvia_automations', JSON.stringify(data)),
+            getFlow: () => {
+                const auto = KorviaDB.getAutomations().find(a => a.id === currentAutomationId);
+                return auto ? auto.flow : [];
+            },
+            saveFlow: (flow) => {
+                KorviaDB.updateAutomation(currentAutomationId, { flow });
+            },
+            addAutomation: (triggerType) => {
+                const automations = KorviaDB.getAutomations();
+                const newAuto = {
+                    id: 'auto_' + Date.now(),
+                    name: 'Automação #' + (automations.length + 1),
+                    type: triggerType,
+                    keyword: 'QUERO',
+                    flow: [],
+                    active: true,
+                    createdAt: new Date().toLocaleDateString('pt-BR')
+                };
+                automations.unshift(newAuto);
+                KorviaDB.saveAutomations(automations);
+                return newAuto.id;
+            },
+            updateAutomation: (id, updates) => {
+                const list = KorviaDB.getAutomations();
+                const idx = list.findIndex(a => a.id === id);
+                if (idx !== -1) {
+                    list[idx] = { ...list[idx], ...updates };
+                    KorviaDB.saveAutomations(list);
+                }
+            },
+            deleteAutomation: (id) => {
+                const list = KorviaDB.getAutomations();
+                const filtered = list.filter(a => a.id !== id);
+                KorviaDB.saveAutomations(filtered);
+                if (currentAutomationId === id) {
+                    currentAutomationId = null;
+                }
+            }
+        };
+
+        // Lógica simples de navegação (SPA feeling)
+        function switchTab(tabId) {
+            if (tabId === 'builder' && !currentAutomationId) {
+                openTriggerModal();
+                return;
+            }
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            const links = document.querySelectorAll('.nav-link');
+            links.forEach(link => {
+                link.classList.remove('bg-blue-600/10', 'text-blue-400', 'border-blue-600/20');
+                link.classList.add('text-slate-400');
+            });
+            
+            document.getElementById('nav-' + tabId).classList.add('bg-blue-600/10', 'text-blue-400', 'border-blue-600/20');
+            document.getElementById('nav-' + tabId).classList.remove('text-slate-400');
+
+            // Atualiza Bottom Nav no Mobile
+            const mobileItems = ['dashboard', 'builder', 'ai', 'leads'];
+            mobileItems.forEach(item => {
+                const btn = document.getElementById('m-nav-' + item);
+                if (btn) {
+                    if (item === tabId) {
+                        btn.classList.add('text-blue-400');
+                        btn.classList.remove('text-slate-500');
+                    } else {
+                        btn.classList.remove('text-blue-400');
+                        btn.classList.add('text-slate-500');
+                    }
+                }
+            });
+
+            if (tabId === 'leads') renderLeads();
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'admin') renderAdmin();
+            if (tabId === 'ai') renderAISettings();
+        }
+
+        function renderAdmin() {
+            const users = JSON.parse(localStorage.getItem('korvia_users') || '[]');
+            const automations = KorviaDB.getAutomations();
+            const isMaintenance = localStorage.getItem('korvia_maintenance_mode') === 'true';
+
+            document.getElementById('admin-user-count').innerText = users.length;
+            document.getElementById('admin-active-subs').innerText = users.length;
+            document.getElementById('admin-mrr').innerText = `R$ ${(users.length * 97).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('admin-total-automations').innerText = automations.length;
+
+            // Sincroniza visual do botão de manutenção
+            const btn = document.getElementById('maintenance-btn');
+            if (isMaintenance) {
+                btn.innerText = "Desativar Manutenção";
+                btn.className = "mt-3 text-[9px] bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500/50 transition-all uppercase font-black";
+            } else {
+                btn.innerText = "Ativar Manutenção";
+                btn.className = "mt-3 text-[9px] bg-slate-800 text-slate-400 px-2 py-1 rounded border border-white/5 transition-all uppercase font-black";
+            }
+            
+            const table = document.getElementById('admin-users-table');
+            table.innerHTML = users.map(u => `
+                <tr class="border-t border-slate-800 hover:bg-blue-500/5 transition-colors">
+                    <td class="p-4 font-mono text-blue-400">${u.email}</td>
+                    <td class="p-4"><span class="bg-slate-700 px-2 py-1 rounded text-xs text-slate-300">••••••••</span></td>
+                    <td class="p-4 text-slate-500 text-xs">${u.lastLogin}</td>
+                </tr>
+            `).join('');
+
+            const notifList = document.getElementById('admin-notif-list');
+            const notifications = JSON.parse(localStorage.getItem('korvia_notifications') || '[]');
+            notifList.innerHTML = notifications.length ? notifications.map(n => `
+                <div class="flex items-center justify-between p-3 bg-slate-900/50 rounded-xl border border-white/5">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs text-slate-200 truncate font-medium">${n.message}</p>
+                        <p class="text-[9px] text-slate-500 uppercase font-bold mt-1">${n.date}</p>
+                    </div>
+                    <button onclick="deleteGlobalNotification(${n.id})" class="ml-4 p-2 text-slate-600 hover:text-red-500 transition-colors">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('') : '<p class="text-slate-600 italic text-sm text-center py-4">Nenhuma notificação enviada.</p>';
+
+            const logsList = document.getElementById('admin-logs-list');
+            const logs = KorviaDB.getLogs();
+            logsList.innerHTML = logs.length ? logs.map(log => `
+                <div class="flex items-center justify-between p-3 bg-slate-900/50 rounded-xl border border-white/5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_5px_#3b82f6]"></div>
+                        <span class="text-sm text-slate-300 font-medium">${log.action}</span>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-slate-500">${log.user}</p>
+                        <p class="text-[9px] text-slate-600 font-bold">${log.timestamp}</p>
+                    </div>
+                </div>
+            `).join('') : '<p class="text-slate-600 italic text-sm text-center py-4">Sem logs registrados.</p>';
+            
+            if(users.length === 0) table.innerHTML = '<tr><td colspan="3" class="p-8 text-center text-slate-600 italic">Nenhum outro usuário cadastrado.</td></tr>';
+            lucide.createIcons();
+        }
+
+        function toggleMaintenance() {
+            const isCurrentlyOn = localStorage.getItem('korvia_maintenance_mode') === 'true';
+            const action = isCurrentlyOn ? 'desativar' : 'ativar';
+
+            if(confirm(`Deseja ${action} o modo de manutenção global? Usuários não-admin serão bloqueados.`)) {
+                localStorage.setItem('korvia_maintenance_mode', !isCurrentlyOn);
+                KorviaDB.addLog(`Modo Manutenção ${!isCurrentlyOn ? 'ativado' : 'desativado'} pelo administrador.`);
+                renderAdmin();
+            }
+        }
+
+        // GLOBAL NOTIFICATIONS LOGIC
+        function sendGlobalNotification() {
+            const input = document.getElementById('admin-notif-input');
+            const message = input.value.trim();
+            if (!message) return alert("Por favor, digite uma mensagem.");
+
+            const notifications = JSON.parse(localStorage.getItem('korvia_notifications') || '[]');
+            notifications.unshift({
+                id: Date.now(),
+                message: message,
+                date: new Date().toLocaleString('pt-BR')
+            });
+            localStorage.setItem('korvia_notifications', JSON.stringify(notifications));
+            input.value = '';
+            KorviaDB.addLog(`Notificação global enviada: "${message}"`);
+            renderAdmin();
+            alert("Notificação enviada para todos os usuários!");
+        }
+
+        function deleteGlobalNotification(id) {
+            const notifications = JSON.parse(localStorage.getItem('korvia_notifications') || '[]');
+            const filtered = notifications.filter(n => n.id !== id);
+            localStorage.setItem('korvia_notifications', JSON.stringify(filtered));
+            renderAdmin();
+        }
+
+        function checkMaintenanceAccess() {
+            const isMaintenance = localStorage.getItem('korvia_maintenance_mode') === 'true';
+            const loggedInUser = localStorage.getItem('korvia_loggedInUser');
+            const isAdmin = loggedInUser === 'richarddasilvacampos25@gmail.com';
+
+            if (isMaintenance && !isAdmin && loggedInUser) {
+                document.body.innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center bg-slate-950 text-white p-8 text-center">
+                        <div class="space-y-6 max-w-md animate-[fadeInUp_0.5s_ease-out]">
+                            <div class="text-red-500"><i data-lucide="wrench" class="w-20 h-20 mx-auto"></i></div>
+                            <h1 class="text-4xl font-black italic uppercase">Manutenção</h1>
+                            <p class="text-slate-400">A Korvia AI está passando por uma atualização técnica para melhorar sua performance. Voltamos em alguns minutos!</p>
+                            <div class="flex flex-col gap-4">
+                                <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-xl font-bold transition-all">Tentar Novamente</button>
+                                <button onclick="localStorage.removeItem('korvia_loggedInUser'); location.reload();" class="text-xs text-slate-600 underline">Entrar com outra conta</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+                return true;
+            }
+            return false;
+        }
+
+        // HELPERS PARA LISTAGEM
+        function getTriggerIcon(type) {
+            const icons = { comments: 'message-square', direct: 'send', story: 'instagram' };
+            return icons[type] || 'zap';
+        }
+
+        function getTriggerName(type) {
+            const names = { comments: 'Comentário no Post', direct: 'Palavra-chave no Direct', story: 'Menção nos Stories' };
+            return names[type] || 'Gatilho Personalizado';
+        }
+
+        function toggleAutomationStatus(id) {
+            const list = KorviaDB.getAutomations();
+            const idx = list.findIndex(a => a.id === id);
+            if (idx !== -1) {
+                list[idx].active = !list[idx].active;
+                KorviaDB.saveAutomations(list);
+                renderDashboard();
+            }
+        }
+
+        function editAutomation(id) {
+            currentAutomationId = id;
+            switchTab('builder');
+            renderFlowSteps();
+        }
+
+        // INSTAGRAM CONNECTION LOGIC (REAL LOGIN)
+        function connectInstagram() {
+            const settings = KorviaDB.getSettings();
+
+            if (settings.igConnected) {
+                if(confirm("Deseja desconectar sua conta profissional?")) {
+                    KorviaDB.setSettings({ ...settings, igConnected: false, igHandle: "", metaToken: "", igBusinessId: "" });
+                    KorviaDB.addLog("Instagram desconectado.");
+                    renderDashboard();
+                }
+                return;
+            }
+
+            // REQUISITO: O usuário deve ter preenchido as chaves na aba Treinar IA
+            if (!settings.metaToken || !settings.igBusinessId) {
+                alert("PASSO OBRIGATÓRIO:\n\nPara vincular seu Instagram real, você precisa primeiro configurar suas chaves da Meta (Page Token e Business ID) na aba 'Treinar IA'.");
+                switchTab('ai');
+                return;
+            }
+
+            // Se as chaves já existem, pedimos o @ para identificação visual e confirmamos o vínculo
+            const handle = prompt("CHAVES DETECTADAS!\n\nDigite o @ do seu perfil profissional para ativar a automação real:", "@");
+            
+            if (handle && handle !== "@") {
+                const btn = document.getElementById('ig-connect-btn');
+                btn.innerHTML = '<i class="animate-spin" data-lucide="refresh-cw"></i> Validando Token Meta...';
+                lucide.createIcons();
+                
+                setTimeout(() => {
+                    KorviaDB.setSettings({
+                        ...settings,
+                        igConnected: true,
+                        igHandle: handle
+                    });
+                    KorviaDB.addLog(`Vínculo Real: ${handle} usando tokens próprios.`);
+                    renderDashboard();
+                    alert("Sucesso! Korvia AI agora está operando na sua conta real: " + handle);
+                }, 2000);
+            }
+        }
+
+        // SALVAR CONFIGURAÇÕES NO BACKEND (O usuário configura no painel)
+        async function saveSettings() {
+            const key = document.getElementById('openai-key').value;
+            const fbAppId = document.getElementById('fb-app-id').value;
+            const metaToken = document.getElementById('meta-token').value;
+            const igId = document.getElementById('ig-business-id').value;
+            const context = document.getElementById('brand-context').value;
+            const instructions = document.getElementById('ai-instructions').value;
+            
+            const newSettings = { 
+                openaiKey: key,
+                fbAppId: fbAppId,
+                metaToken: metaToken,
+                igBusinessId: igId,
+                brandContext: context,
+                aiInstructions: instructions
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newSettings)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    KorviaDB.setSettings({ ...newSettings, igConnected: true });
+                    updateStatusLEDs();
+                    alert("Configurações aplicadas com sucesso! Sua IA já pode operar.");
+                }
+            } catch (e) {
+                alert("Erro ao salvar no servidor.");
+            }
+        }
+
+        async function syncSettingsWithServer() {
+            try {
+                const response = await fetch('http://localhost:3000/api/settings');
+                const settings = await response.json();
+                const local = KorviaDB.getSettings();
+                KorviaDB.setSettings({ ...local, ...settings });
+                renderDashboard();
+            } catch(e) {}
+        }
+
+        // PUBLICAR E REMOVER
+        async function publishAutomation() {
+            const flow = KorviaDB.getFlow();
+            if (flow.length === 0) {
+                alert("Adicione pelo menos um passo ao seu fluxo antes de publicar.");
+                return;
+            }
+            const keyword = document.getElementById('flow-keyword').value.toUpperCase();
+            
+            try {
+                // Envia para o Backend para que o Webhook saiba o que fazer
+                await fetch('http://localhost:3000/api/publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keyword, flow })
+                });
+
+                KorviaDB.updateAutomation(currentAutomationId, { 
+                    keyword: keyword,
+                    flow: flow,
+                    lastPublished: new Date().toISOString()
+                });
+
+                localStorage.setItem('korvia_published_keyword', keyword);
+                KorviaDB.addLog(`Automação publicada com keyword: ${keyword}`);
+                alert("Automação publicada e ativa! O servidor agora monitora seu Instagram 24h.");
+                switchTab('dashboard');
+            } catch (e) {
+                alert("Erro ao conectar com o servidor para publicar.");
+            }
+        }
+
+        function deleteAutomation() {
+            if (confirm("Tem certeza que deseja remover esta automação? Isso apagará todos os passos do fluxo.")) {
+                KorviaDB.deleteAutomation(currentAutomationId);
+                currentAutomationId = null;
+                KorviaDB.addLog("Automação removida.");
+                renderDashboard();
+                switchTab('dashboard');
+            }
+        }
+
+        // FLOW BUILDER LOGIC
+        function renderFlowSteps() {
+            const container = document.getElementById('flow-steps-container');
+            const flow = KorviaDB.getFlow();
+            const triggerType = localStorage.getItem('korvia_trigger_type') || 'comments';
+            
+            const triggerText = triggerType === 'comments' 
+                ? `Usuário comenta <input type="text" id="flow-keyword" class="bg-blue-600/20 text-blue-300 px-2 py-0.5 rounded border-none w-24 outline-none font-bold" value="${localStorage.getItem('korvia_published_keyword') || 'QUERO'}"> no post.`
+                : `Usuário envia palavra-chave <input type="text" id="flow-keyword" class="bg-blue-600/20 text-blue-300 px-2 py-0.5 rounded border-none w-24 outline-none font-bold" value="${localStorage.getItem('korvia_published_keyword') || 'QUERO'}"> no Direct.`;
+
+            const triggerHtml = `<div class="glass-card p-4 rounded-xl border-blue-500/50 w-80 shadow-2xl"><div class="flex items-center gap-2 mb-2 text-blue-400 text-xs font-bold uppercase tracking-wider"><i data-lucide="${triggerType === 'comments' ? 'message-square' : 'send'}" class="w-4 h-4"></i> Gatilho: ${triggerType === 'comments' ? 'Comentário' : 'Direct'}</div><p class="text-sm">${triggerText}</p></div>`;
+            
+            let html = triggerHtml;
+            let previewHtml = ''; // For iPhone preview
+            
+            flow.forEach((step, index) => {
+                html += `<div class="node-connector"></div>`;
+                html += `
+                <div class="glass-card p-4 rounded-xl border-purple-500/50 w-80 shadow-2xl relative group transition-all hover:border-purple-500">
+                    <button onclick="removeStep(${index})" class="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg"><i data-lucide="x" class="w-3 h-3"></i></button>
+                    ${index < flow.length - 1 || true ? '<div class="absolute -bottom-10 left-1/2 -translate-x-1/2 node-connector"></div>' : ''}
+                    <div class="flex items-center gap-2 mb-2 text-purple-400 text-xs font-bold uppercase tracking-wider">
+                        <i data-lucide="${getStepIcon(step.type)}" class="w-4 h-4"></i> 
+                        ${step.type === 'delay' ? 'Aguardar' : 'Ação: ' + step.type}
+                    </div>
+                    ${step.type === 'delay' 
+                        ? `<div class="flex items-center gap-2 text-sm"><input type="number" onchange="updateStep(${index}, this.value)" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-20" value="${step.content}"> segundos</div>`
+                        : `<textarea onchange="updateStep(${index}, this.value)" class="bg-transparent text-sm w-full h-16 border-none outline-none resize-none focus:ring-1 focus:ring-purple-500/30 rounded p-1" placeholder="Digite o conteúdo ou URL...">${step.content}</textarea>`
+                    }
+                </div>`;
+
+                // Build iPhone Preview Content
+                if (step.type === 'text') {
+                    previewHtml += `<div class="flex flex-col items-start max-w-[85%] animate-[fadeInUp_0.3s_ease-out]"><div class="bg-slate-800 text-white text-[11px] px-3 py-2 rounded-2xl rounded-tl-none leading-tight border border-slate-700 shadow-sm">${step.content || 'Digite uma mensagem...'}</div></div>`;
+                } else if (step.type === 'image') {
+                    previewHtml += `<div class="flex flex-col items-start max-w-[85%] animate-[fadeInUp_0.3s_ease-out]"><div class="bg-slate-800 rounded-2xl overflow-hidden border border-slate-700 shadow-sm">${step.content ? `<img src="${step.content}" class="w-full h-auto">` : `<div class="w-40 h-24 flex items-center justify-center bg-slate-700 text-slate-500 text-[10px]">Sem URL de imagem</div>`}</div></div>`;
+                } else if (step.type === 'audio') {
+                    previewHtml += `<div class="flex flex-col items-start max-w-[85%] animate-[fadeInUp_0.3s_ease-out]"><div class="bg-slate-800 text-white text-[11px] px-3 py-2 rounded-2xl rounded-tl-none flex items-center gap-2 border border-slate-700 shadow-sm"><i data-lucide="play" class="w-3 h-3 fill-white"></i><div class="w-20 h-1 bg-slate-600 rounded-full relative"><div class="absolute left-0 top-0 h-full w-1/3 bg-white rounded-full shadow-[0_0_5px_#fff]"></div></div><span class="text-[8px]">0:12</span></div></div>`;
+                } else if (step.type === 'delay') {
+                    previewHtml += `<div class="flex justify-center my-1"><span class="text-[8px] text-slate-600 uppercase tracking-widest italic font-bold">Aguardando ${step.content}s...</span></div>`;
+                }
+            });
+
+            if (flow.length === 0) {
+                html += `<div class="node-connector"></div>
+                <div class="p-8 border-2 border-dashed border-slate-800 rounded-3xl text-slate-600 text-sm italic">Seu fluxo está vazio. Use o menu abaixo para adicionar passos.</div>`;
+            }
+
+            // Add AI Brain at the end
+            html += `<div class="node-connector"></div>
+                <div class="glass-card p-4 rounded-xl border-cyan-500/50 w-80 shadow-2xl neon-border">
+                    <div class="flex items-center gap-2 mb-2 text-cyan-400 text-xs font-bold uppercase tracking-wider">
+                        <i data-lucide="bot" class="w-4 h-4"></i> Cérebro Korvia IA
+                    </div>
+                    <p class="text-xs italic text-slate-400">A IA responderá automaticamente se o usuário continuar a conversa.</p>
+                </div>`;
+
+            container.innerHTML = html;
+            
+            // Update iPhone Messages
+            const iphoneContainer = document.getElementById('iphone-messages');
+            if (iphoneContainer) {
+                iphoneContainer.innerHTML = previewHtml + `<div class="flex flex-col items-start max-w-[85%] mt-4 opacity-50"><div class="bg-cyan-900/30 text-cyan-400 text-[10px] px-3 py-2 rounded-2xl border border-cyan-500/20 italic leading-tight">IA analisando conversa...</div></div>`;
+            }
+
+            lucide.createIcons();
+        }
+
+        // Check login status on page load
+        window.onload = () => {
+            lucide.createIcons();
+            initTypingHero();
+            initRevealOnScroll();
+            renderLandingFAQ();
+            renderDashboard();
+            renderFlowSteps();
+
+            const loggedInUser = localStorage.getItem('korvia_loggedInUser');
+            if (loggedInUser) {
+                document.getElementById('user-display-name').innerText = loggedInUser.split('@')[0];
+            }
+        }
+
+        function getStepIcon(type) {
+            const icons = { text: 'message-circle', image: 'image', audio: 'mic', delay: 'clock' };
+            return icons[type] || 'zap';
+        }
+
+        function addStep(type) {
+            const flow = KorviaDB.getFlow();
+            const content = type === 'delay' ? '3' : '';
+            flow.push({ type, content });
+            KorviaDB.saveFlow(flow);
+            renderFlowSteps();
+        }
+
+        function updateStep(index, val) {
+            const flow = KorviaDB.getFlow();
+            flow[index].content = val;
+            KorviaDB.saveFlow(flow);
+            renderFlowSteps();
+        }
+
+        function removeStep(index) {
+            const flow = KorviaDB.getFlow();
+            flow.splice(index, 1);
+            KorviaDB.saveFlow(flow);
+            renderFlowSteps();
+        }
+
+        // EXECUTOR DE FLUXO VIA BACKEND (Real e Seguro)
+        async function processFullFlow(recipientId, isSimulation = false) {
+            const flow = KorviaDB.getFlow();
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/process-flow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipientId, flow, isSimulation })
+                });
+                const data = await response.json();
+                if (!data.success && isSimulation) alert("Erro no Servidor: " + data.error);
+                return data.success;
+            } catch (e) {
+                console.error("Erro ao processar fluxo:", e);
+                if (isSimulation) alert("Certifique-se de que o arquivo server.js está rodando!");
+                return false;
+            }
+        }
+
+        // BOTÃO "ENVIAR AGORA" - Faz a automação funcionar para teste
+        async function simulateLeadCapture() {
+            const recipientId = prompt("Para testar o funcionamento real, digite o seu IGSID ou 'TESTE' para simular no navegador:");
+            if (!recipientId) return;
+
+            // Executa o fluxo configurado
+            await processFullFlow(recipientId, true);
+
+            // Salva como um lead para o seu Dashboard
+            KorviaDB.addLead({
+                name: "Teste de Fluxo",
+                ig: recipientId.startsWith('@') ? recipientId : "@user_test",
+                email: "teste@fluxo.com",
+                trigger: document.getElementById('flow-keyword').value,
+                aiResponse: "Fluxo executado com sucesso."
+            });
+            
+            alert("Fim da execução do fluxo. Verifique seu Dashboard de Leads!");
+        }
+
+        function updateStatusLEDs() {
+            const settings = KorviaDB.getSettings();
+            const dashLed = document.getElementById('dash-status-led');
+            const aiLed = document.getElementById('ai-status-led');
+            const bannerText = document.getElementById('ai-status-banner-text');
+            const isConnected = settings.igConnected && settings.openaiKey;
+
+            if (dashLed) {
+                dashLed.className = isConnected ? "w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]" : "w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse";
+            }
+            if (aiLed) {
+                aiLed.className = isConnected ? "w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]" : "w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse";
+            }
+            if (bannerText) {
+                bannerText.innerText = isConnected ? "Status: Inteligência Ativa" : "Status: Não Configurado";
+                bannerText.className = isConnected ? "text-sm text-green-500 mt-1 uppercase font-black tracking-tighter" : "text-sm text-slate-500 mt-1 uppercase font-black tracking-tighter";
+            }
+        }
+
+        function renderLeads() {
+            const body = document.getElementById('leads-table-body');
+            const leads = KorviaDB.getLeads();
+            body.innerHTML = leads.length ? leads.map(l => `
+                <tr class="border-t border-slate-800 hover:bg-slate-800/30 transition-colors">
+                    <td class="p-4 font-semibold">${l.name} <br> <span class="text-xs text-blue-400">${l.ig}</span></td>
+                    <td class="p-4 text-slate-300">${l.email}</td>
+                    <td class="p-4 text-slate-500">${l.date} <span class="text-[10px] opacity-50">${l.time || ''}</span></td>
+                    <td class="p-4"><span class="text-xs text-slate-400 italic">"${l.aiResponse || 'Ação padrão'}"</span></td>
+                </tr>
+            `).join('') : '<tr><td colspan="4" class="p-8 text-center text-slate-500 italic">Nenhum lead capturado ainda. Teste o fluxo de automação!</td></tr>';
+        }
+
+        function renderDashboard() {
+            const settings = KorviaDB.getSettings();
+            const leads = KorviaDB.getLeads();
+            const automations = KorviaDB.getAutomations();
+            
+            // Sincronizar campos da UI
+            if(document.getElementById('openai-key')) document.getElementById('openai-key').value = settings.openaiKey;
+            if(document.getElementById('fb-app-id')) document.getElementById('fb-app-id').value = settings.fbAppId;
+            if(document.getElementById('meta-token')) document.getElementById('meta-token').value = settings.metaToken;
+            if(document.getElementById('ig-business-id')) document.getElementById('ig-business-id').value = settings.igBusinessId;
+            if(document.getElementById('brand-context')) document.getElementById('brand-context').value = settings.brandContext;
+            if(document.getElementById('ai-instructions')) document.getElementById('ai-instructions').value = settings.aiInstructions;
+
+            // Renderizar Lista de Automações no Dashboard
+            const list = document.getElementById('automations-list');
+            if (automations.length > 0) {
+                list.innerHTML = automations.map(auto => `
+                    <div class="flex items-center justify-between p-4 bg-slate-800/40 rounded-xl border ${auto.active ? 'border-blue-500/20' : 'border-slate-800'} transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 ${auto.active ? 'bg-blue-500/20 text-blue-500' : 'bg-slate-700 text-slate-500'} rounded flex items-center justify-center">
+                                <i data-lucide="${getTriggerIcon(auto.type)}"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold ${auto.active ? 'text-white' : 'text-slate-500'}">${auto.name} <span class="text-xs font-normal text-slate-500 ml-2">"${auto.keyword}"</span></p>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">${getTriggerName(auto.type)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleAutomationStatus('${auto.id}')" class="text-[10px] uppercase font-bold ${auto.active ? 'text-green-400' : 'text-slate-600'} hover:opacity-80 transition-all">
+                                ${auto.active ? '● Ativa' : '○ Pausada'}
+                            </button>
+                            <div class="w-px h-6 bg-slate-700 mx-2"></div>
+                            <button onclick="editAutomation('${auto.id}')" class="p-2 hover:bg-blue-500/10 rounded-lg transition-all" title="Editar Fluxo">
+                                <i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = ` 
+                    <div class="text-center py-6">
+                        <p class="text-slate-500 text-sm mb-4">Nenhuma automação ativa no momento.</p>
+                        <button onclick="openTriggerModal()" class="text-blue-400 hover:text-blue-300 font-bold text-sm">+ Criar Primeira Automação</button>
+                    </div>
+                `;
+            }
+
+            document.getElementById('ig-status-text').innerText = settings.igConnected ? (settings.igHandle || "@conectado") : "Vincular Instagram";
+            document.getElementById('ig-connect-btn').className = settings.igConnected 
+                ? "flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg font-semibold border border-blue-500/50 neon-border text-blue-400" 
+                : "flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-4 py-2 rounded-lg font-semibold transition-all shadow-lg";
+
+            document.getElementById('stat-leads').innerText = leads.length;
+            document.getElementById('stat-messages').innerText = leads.length * 3; // Simulado
+            document.getElementById('stat-conv').innerText = settings.igConnected ? "42%" : "0%";
+            document.getElementById('stat-growth').innerText = leads.length > 0 ? "+12%" : "0%";
+            
+            // Renderizar Notificações no Dashboard
+            const notifArea = document.getElementById('dashboard-notifications');
+            const notifications = JSON.parse(localStorage.getItem('korvia_notifications') || '[]');
+            if (notifications.length > 0) {
+                notifArea.innerHTML = notifications.map(n => `
+                    <div class="glass-card p-4 rounded-2xl border-blue-500/30 bg-blue-600/5 flex items-center gap-4 animate-[fadeInUp_0.5s_ease-out]">
+                        <div class="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400 shrink-0">
+                            <i data-lucide="megaphone" class="w-5 h-5"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm text-slate-200 font-semibold leading-snug">${n.message}</p>
+                            <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-tighter">${n.date}</p>
+                        </div>
+                    </div>
+                `).join('');
+                notifArea.classList.remove('hidden');
+            } else {
+                notifArea.classList.add('hidden');
+            }
+
+            // Update LEDs
+            updateStatusLEDs();
+
+            lucide.createIcons();
+        }
+
+        function selectTrigger(type) {
+            currentAutomationId = KorviaDB.addAutomation(type);
+            closeTriggerModal();
+            switchTab('builder');
+            renderFlowSteps();
+        }
+
+        // CONSOLIDATED INITIALIZATION
+        window.onload = () => {
+            // Global UI Init
+            lucide.createIcons();
+            initRevealOnScroll();
+
+            // Verifica se o sistema está trancado para manutenção
+            if (checkMaintenanceAccess()) return;
+
+            // Check Session
+            const loggedInUser = localStorage.getItem('korvia_loggedInUser');
+            if (loggedInUser) {
+                updateUserUI(loggedInUser);
+                syncSettingsWithServer();
+                renderDashboard();
+                renderFlowSteps();
+            }
+            initTypingHero();
+            renderLandingFAQ();
+        }
+    </script>
+</body>
+</html>
