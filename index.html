@@ -1099,11 +1099,14 @@
                 
                 // Login imediato para não dar erro
                 localStorage.setItem('korvia_loggedInUser', email);
-                enterApp(email);
-
+                
+                // REDIRECIONAMENTO: Agora volta para a Landing Page com os botões atualizados em vez de pular para o App
+                closeAuth();
+                updateLandingAuthButtons();
             } catch (e) {
                 localStorage.setItem('korvia_loggedInUser', email);
-                enterApp(email);
+                closeAuth();
+                updateLandingAuthButtons();
             }
         }
 
@@ -1211,6 +1214,7 @@
             document.getElementById('view-landing').classList.remove('hidden');
             document.getElementById('view-app').classList.add('hidden');
             window.scrollTo(0,0);
+            updateLandingAuthButtons();
         }
 
         // TYPING EFFECT
@@ -2146,15 +2150,15 @@
 
             // Check Session
             const loggedInUser = localStorage.getItem('korvia_loggedInUser');
+            
+            // Inicialização padrão da Landing Page (Sempre visível ao entrar no site)
+            initTypingHero();
+            renderLandingFAQ();
+            updateLandingAuthButtons();
+
             if (loggedInUser && loggedInUser !== "demo@korvia.ai") {
-                // Se já estiver logado, entra direto no app para evitar cliques acidentais no demo
-                enterApp(loggedInUser);
-                
                 // Sincronização em "tempo real" (Busca dados a cada 10 segundos)
                 setInterval(syncDataWithServer, 10000);
-            } else {
-                initTypingHero();
-                renderLandingFAQ();
             }
         }
     </script>
