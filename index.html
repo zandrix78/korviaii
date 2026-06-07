@@ -1681,6 +1681,7 @@
             let leads = KorviaDB.getLeads();
             let automations = KorviaDB.getAutomations();
             const userEmail = localStorage.getItem('korvia_loggedInUser');
+            const isAdmin = userEmail === 'richarddasilvacampos25@gmail.com';
 
             if (API_URL && userEmail && userEmail !== "demo@korvia.ai") {
                 try {
@@ -1719,6 +1720,32 @@
                     if (resMRR.ok) {
                         const data = await resMRR.json();
                         if(data.amount) KorviaDB.setMRR(data.amount);
+                    }
+
+                    // Sincroniza Dados de Admin (Apenas se for o Richard)
+                    if (isAdmin) {
+                        // Puxa lista global de usuários para o painel
+                        const resUsers = await fetch(`${API_URL}/api/admin/users`, {
+                            headers: { 'x-user-email': userEmail }
+                        });
+                        if (resUsers.ok) {
+                            const allUsers = await resUsers.json();
+                            localStorage.setItem('korvia_users', JSON.stringify(allUsers));
+                        }
+
+                        // Puxa status de manutenção global
+                        const resMaint = await fetch(`${API_URL}/api/admin/maintenance-status`);
+                        if (resMaint.ok) {
+                            const status = await resMaint.json();
+                            localStorage.setItem('korvia_maintenance_mode', status.enabled);
+                        }
+                    }
+
+                    // Sincroniza Notificações Globais para todos
+                    const resNotif = await fetch(`${API_URL}/api/notifications`);
+                    if (resNotif.ok) {
+                        const notifs = await resNotif.json();
+                        localStorage.setItem('korvia_notifications', JSON.stringify(notifs));
                     }
 
                 } catch(e) { console.warn("Erro ao sincronizar com servidor."); }
