@@ -1104,7 +1104,7 @@
             document.getElementById('view-landing').classList.add('hidden');
             document.getElementById('view-auth').classList.add('hidden');
             document.getElementById('view-app').classList.remove('hidden');
-            syncSettingsWithServer();
+            syncDataWithServer(); // Corrigido para a função que realmente sincroniza tudo
             renderDashboard();
             switchTab('dashboard');
         }
@@ -1435,8 +1435,10 @@
             document.getElementById('admin-user-count').innerText = users.length;
             document.getElementById('admin-active-subs').innerText = users.length;
             
-            // Agora usamos o valor salvo. Se não existir (null), ele faz o cálculo padrão.
-            const mrrValue = (savedMRR !== null && savedMRR !== undefined) ? parseFloat(savedMRR) : (users.length * 97);
+            // Prioridade total ao valor que vem do MongoDB. 
+            // Só calculamos (users * 97) se for a PRIMEIRA vez absoluta (sem dados no DB).
+            let mrrValue = (savedMRR !== null && savedMRR !== undefined) ? parseFloat(savedMRR) : (users.length * 97);
+            
             if(document.getElementById('admin-mrr')) document.getElementById('admin-mrr').innerText = `R$ ${mrrValue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('admin-total-automations').innerText = automations.length;
 
@@ -1737,7 +1739,7 @@
                     });
                     if (resMRR.ok) {
                         const data = await resMRR.json();
-                        if(data.mrr !== undefined) KorviaDB.setMRR(data.mrr);
+                        if(data.mrr !== undefined && data.mrr !== null) KorviaDB.setMRR(data.mrr);
                     }
 
                     // Sincroniza Dados de Admin (Apenas se for o Richard)
@@ -2128,19 +2130,16 @@
 
             // Check Session
             const loggedInUser = localStorage.getItem('korvia_loggedInUser');
-            if (loggedInUser) {
-                updateUserUI(loggedInUser);
-                // Carrega tudo do servidor para garantir que os dados não sumiram
-                syncDataWithServer().then(() => {
-                    renderDashboard();
-                    renderLeads();
-                    renderFlowSteps();
-                });
+            if (loggedInUser && loggedInUser !== "demo@korvia.ai") {
+                // Se já estiver logado, entra direto no app para evitar cliques acidentais no demo
+                enterApp(loggedInUser);
+                
                 // Sincronização em "tempo real" (Busca dados a cada 10 segundos)
                 setInterval(syncDataWithServer, 10000);
+            } else {
+                initTypingHero();
+                renderLandingFAQ();
             }
-            initTypingHero();
-            renderLandingFAQ();
         }
     </script>
 </body>
