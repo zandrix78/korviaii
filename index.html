@@ -1079,6 +1079,14 @@
                 return alert("Por favor, preencha todos os campos.");
             }
 
+            // CORREÇÃO MOBILE: Limpa dados residuais (especialmente da conta Demo) ao trocar de usuário
+            const lastUser = localStorage.getItem('korvia_loggedInUser');
+            if (lastUser !== email) {
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('korvia_')) localStorage.removeItem(key);
+                });
+            }
+
             try {
                 // Tenta o servidor mas não trava se ele der erro
                 if (API_URL) {
@@ -1191,6 +1199,14 @@
         }
 
         function logout() {
+            const email = localStorage.getItem('korvia_loggedInUser');
+            // Se estiver saindo da demo, garante que os dados fake sejam removidos do celular
+            if (email === 'demo@korvia.ai') {
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('korvia_')) localStorage.removeItem(key);
+                });
+            }
+
             localStorage.removeItem('korvia_loggedInUser');
             document.getElementById('view-landing').classList.remove('hidden');
             document.getElementById('view-app').classList.add('hidden');
