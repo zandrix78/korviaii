@@ -1384,6 +1384,7 @@
         };
 
         // Lógica simples de navegação (SPA feeling)
+        let activeTab = 'dashboard';
         function switchTab(tabId) {
             if (tabId === 'builder' && !currentAutomationId) {
                 openTriggerModal();
@@ -1393,6 +1394,7 @@
                 tab.classList.add('hidden');
             });
             document.getElementById('tab-' + tabId).classList.remove('hidden');
+            activeTab = tabId;
 
             const links = document.querySelectorAll('.nav-link');
             links.forEach(link => {
@@ -1428,10 +1430,14 @@
             const users = JSON.parse(localStorage.getItem('korvia_users') || '[]');
             const automations = KorviaDB.getAutomations();
             const isMaintenance = localStorage.getItem('korvia_maintenance_mode') === 'true';
+            const savedMRR = KorviaDB.getMRR();
 
             document.getElementById('admin-user-count').innerText = users.length;
             document.getElementById('admin-active-subs').innerText = users.length;
-            document.getElementById('admin-mrr').innerText = `R$ ${(users.length * 97).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            
+            // Agora usamos o valor salvo. Se não existir (null), ele faz o cálculo padrão.
+            const mrrValue = (savedMRR !== null && savedMRR !== undefined) ? parseFloat(savedMRR) : (users.length * 97);
+            if(document.getElementById('admin-mrr')) document.getElementById('admin-mrr').innerText = `R$ ${mrrValue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('admin-total-automations').innerText = automations.length;
 
             // Sincroniza visual do botão de manutenção
@@ -1461,7 +1467,7 @@
                         <p class="text-xs text-slate-200 truncate font-medium">${n.message}</p>
                         <p class="text-[9px] text-slate-500 uppercase font-bold mt-1">${n.date}</p>
                     </div>
-                    <button onclick="deleteGlobalNotification(${n.id})" class="ml-4 p-2 text-slate-600 hover:text-red-500 transition-colors">
+                    <button onclick="deleteGlobalNotification('${n.id || n._id}')" class="ml-4 p-2 text-slate-600 hover:text-red-500 transition-colors">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -1520,30 +1526,42 @@
         }
 
         // GLOBAL NOTIFICATIONS LOGIC
-        function sendGlobalNotification() {
+        async function sendGlobalNotification() {
             const input = document.getElementById('admin-notif-input');
             const message = input.value.trim();
             if (!message) return alert("Por favor, digite uma mensagem.");
 
-            const notifications = JSON.parse(localStorage.getItem('korvia_notifications') || '[]');
-            notifications.unshift({
-                id: Date.now(),
+            const newNotif = {
                 message: message,
                 date: new Date().toLocaleString('pt-BR')
-            });
-            localStorage.setItem('korvia_notifications', JSON.stringify(notifications));
+            };
+
+            const userEmail = localStorage.getItem('korvia_loggedInUser');
+            if (API_URL && userEmail) {
+                await fetch(`${API_URL}/api/notifications`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-user-email': userEmail },
+                    body: JSON.stringify(newNotif)
+                });
+            }
+
             input.value = '';
             KorviaDB.addLog(`Notificação global enviada: "${message}"`);
-            renderAdmin();
-            alert("Notificação enviada para todos os usuários!");
+            await syncDataWithServer();
+            alert("Notificação enviada!");
         }
 
-        function deleteGlobalNotification(id) {
-            const notifications = JSON.parse(localStorage.getItem('korvia_notifications') || '[]');
-            const filtered = notifications.filter(n => n.id !== id);
-            localStorage.setItem('korvia_notifications', JSON.stringify(filtered));
-            renderAdmin();
+        async function deleteGlobalNotification(id) {
+            const userEmail = localStorage.getItem('korvia_loggedInUser');
+            if (API_URL && userEmail) {
+                await fetch(`${API_URL}/api/notifications/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-user-email': userEmail }
+                });
+            }
+            await syncDataWithServer();
         }
+        window.deleteGlobalNotification = deleteGlobalNotification;
 
         function checkMaintenanceAccess() {
             const isMaintenance = localStorage.getItem('korvia_maintenance_mode') === 'true';
@@ -1714,12 +1732,12 @@
                     }
 
                     // Sincroniza MRR
-                    const resMRR = await fetch(`${API_URL}/api/admin/mrr`, {
+                    const resMRR = await fetch(`${API_URL}/api/admin/stats`, {
                         headers: { 'x-user-email': userEmail }
                     });
                     if (resMRR.ok) {
                         const data = await resMRR.json();
-                        if(data.amount) KorviaDB.setMRR(data.amount);
+                        if(data.mrr !== undefined) KorviaDB.setMRR(data.mrr);
                     }
 
                     // Sincroniza Dados de Admin (Apenas se for o Richard)
@@ -1751,7 +1769,10 @@
                 } catch(e) { console.warn("Erro ao sincronizar com servidor."); }
             }
 
-            renderDashboard();
+            // Atualiza a tela atual com os dados novos
+            if (activeTab === 'dashboard') renderDashboard();
+            else if (activeTab === 'admin') renderAdmin();
+            else if (activeTab === 'leads') renderLeads();
         }
 
         // PUBLICAR E REMOVER
@@ -2115,6 +2136,8 @@
                     renderLeads();
                     renderFlowSteps();
                 });
+                // Sincronização em "tempo real" (Busca dados a cada 10 segundos)
+                setInterval(syncDataWithServer, 10000);
             }
             initTypingHero();
             renderLandingFAQ();
