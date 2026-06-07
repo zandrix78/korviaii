@@ -1099,14 +1099,10 @@
                 
                 // Login imediato para não dar erro
                 localStorage.setItem('korvia_loggedInUser', email);
-                
-                // REDIRECIONAMENTO: Agora volta para a Landing Page com os botões atualizados em vez de pular para o App
-                closeAuth();
-                updateLandingAuthButtons();
+                enterApp(email);
             } catch (e) {
                 localStorage.setItem('korvia_loggedInUser', email);
-                closeAuth();
-                updateLandingAuthButtons();
+                enterApp(email);
             }
         }
 
