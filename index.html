@@ -1671,13 +1671,18 @@
 
         async function syncSettingsWithServer() {
             let settings = KorviaDB.getSettings();
-            
-            if (API_URL) {
+            const userEmail = localStorage.getItem('korvia_loggedInUser');
+
+            if (API_URL && userEmail && userEmail !== "demo@korvia.ai") {
                 try {
-                    const response = await fetch(`${API_URL}/api/settings`);
+                    const response = await fetch(`${API_URL}/api/settings`, {
+                        headers: { 'x-user-email': userEmail }
+                    });
                     const serverSettings = await response.json();
-                    settings = { ...settings, ...serverSettings };
-                    KorviaDB.setSettings(settings);
+                    if (serverSettings && Object.keys(serverSettings).length > 0) {
+                        settings = { ...serverSettings };
+                        KorviaDB.setSettings(settings);
+                    }
                 } catch(e) { console.warn("Erro ao sincronizar com servidor."); }
             }
 
@@ -1954,7 +1959,7 @@
 
             // Renderizar Lista de Automações no Dashboard
             const list = document.getElementById('automations-list');
-            if (automations.length > 0) {
+            if (automations && automations.length > 0) {
                 list.innerHTML = automations.map(auto => `
                     <div class="flex items-center justify-between p-4 bg-slate-800/40 rounded-xl border ${auto.active ? 'border-blue-500/20' : 'border-slate-800'} transition-all">
                         <div class="flex items-center gap-4">
@@ -1992,9 +1997,9 @@
                 : "flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-4 py-2 rounded-lg font-semibold transition-all shadow-lg";
 
             document.getElementById('stat-leads').innerText = leads.length;
-            document.getElementById('stat-messages').innerText = leads.length * 3; // Simulado
+            document.getElementById('stat-messages').innerText = leads.length; 
             document.getElementById('stat-conv').innerText = settings.igConnected ? "42%" : "0%";
-            document.getElementById('stat-growth').innerText = leads.length > 0 ? "+12%" : "0%";
+            document.getElementById('stat-growth').innerText = leads.length > 0 ? "Ativo" : "0%";
             
             // Renderizar Notificações no Dashboard
             const notifArea = document.getElementById('dashboard-notifications');
