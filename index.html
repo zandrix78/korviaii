@@ -1331,6 +1331,9 @@
             getSettings: () => JSON.parse(localStorage.getItem('korvia_settings') || '{"igConnected": false, "openaiKey": "", "fbAppId": "", "metaToken": "", "igBusinessId": "", "brandContext": "", "aiInstructions": "Nunca dê o preço direto, peça o WhatsApp primeiro."}'), // Default settings
             setSettings: (settings) => localStorage.setItem('korvia_settings', JSON.stringify(settings)),
             
+            getMRR: () => localStorage.getItem('korvia_admin_mrr'),
+            setMRR: (val) => localStorage.setItem('korvia_admin_mrr', val),
+
             addLog: (action) => {
                 const logs = JSON.parse(localStorage.getItem('korvia_logs') || '[]');
                 logs.unshift({ id: Date.now(), user: localStorage.getItem('korvia_loggedInUser') || 'Sistema', action, timestamp: new Date().toLocaleString('pt-BR') });
@@ -1490,13 +1493,17 @@
             
             if (newVal !== null && !isNaN(parseFloat(newVal))) {
                 const amount = parseFloat(newVal);
+                
+                // Salva Localmente primeiro para garantir que a UI atualize
+                KorviaDB.setMRR(amount);
+                renderAdmin();
+
                 if (API_URL && userEmail) {
-                    await fetch(`${API_URL}/api/admin/update-mrr`, {
+                    fetch(`${API_URL}/api/admin/update-mrr`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'x-user-email': userEmail },
                         body: JSON.stringify({ amount })
-                    });
-                    renderAdmin();
+                    }).catch(e => console.log("Servidor offline, salvo apenas localmente."));
                 }
             }
         }
@@ -1669,26 +1676,54 @@
             renderDashboard();
         }
 
-        async function syncSettingsWithServer() {
+        async function syncDataWithServer() {
             let settings = KorviaDB.getSettings();
+            let leads = KorviaDB.getLeads();
+            let automations = KorviaDB.getAutomations();
             const userEmail = localStorage.getItem('korvia_loggedInUser');
 
             if (API_URL && userEmail && userEmail !== "demo@korvia.ai") {
                 try {
-                    const response = await fetch(`${API_URL}/api/settings`, {
+                    // Sincroniza Configurações
+                    const resSettings = await fetch(`${API_URL}/api/settings`, {
                         headers: { 'x-user-email': userEmail }
                     });
-                    const serverSettings = await response.json();
-                    if (serverSettings && Object.keys(serverSettings).length > 0) {
+                    if (resSettings.ok) {
+                        const serverSettings = await resSettings.json();
                         settings = { ...serverSettings };
                         KorviaDB.setSettings(settings);
                     }
+
+                    // Sincroniza Leads (Puxa do servidor para o celular/PC)
+                    const resLeads = await fetch(`${API_URL}/api/leads`, {
+                        headers: { 'x-user-email': userEmail }
+                    });
+                    if (resLeads.ok) {
+                        const serverLeads = await resLeads.json();
+                        localStorage.setItem('korvia_leads', JSON.stringify(serverLeads));
+                    }
+
+                    // Sincroniza Automações
+                    const resAutos = await fetch(`${API_URL}/api/automations`, {
+                        headers: { 'x-user-email': userEmail }
+                    });
+                    if (resAutos.ok) {
+                        const serverAutos = await resAutos.json();
+                        KorviaDB.saveAutomations(serverAutos);
+                    }
+
+                    // Sincroniza MRR
+                    const resMRR = await fetch(`${API_URL}/api/admin/mrr`, {
+                        headers: { 'x-user-email': userEmail }
+                    });
+                    if (resMRR.ok) {
+                        const data = await resMRR.json();
+                        if(data.amount) KorviaDB.setMRR(data.amount);
+                    }
+
                 } catch(e) { console.warn("Erro ao sincronizar com servidor."); }
             }
 
-            if(document.getElementById('openai-key')) document.getElementById('openai-key').value = settings.openaiKey || '';
-            if(document.getElementById('brand-context')) document.getElementById('brand-context').value = settings.brandContext || '';
-            if(document.getElementById('ai-instructions')) document.getElementById('ai-instructions').value = settings.aiInstructions || '';
             renderDashboard();
         }
 
@@ -2048,7 +2083,7 @@
             if (loggedInUser) {
                 updateUserUI(loggedInUser);
                 // Carrega tudo do servidor para garantir que os dados não sumiram
-                syncSettingsWithServer().then(() => {
+                syncDataWithServer().then(() => {
                     renderDashboard();
                     renderLeads();
                     renderFlowSteps();
