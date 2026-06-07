@@ -1100,10 +1100,10 @@
                 
                 // Login imediato para não dar erro
                 localStorage.setItem('korvia_loggedInUser', email);
-                enterApp(email); // CORREÇÃO: Redireciona para o Dashboard imediatamente após login
+                enterApp(email); 
             } catch (e) {
                 localStorage.setItem('korvia_loggedInUser', email);
-                enterApp(email); // CORREÇÃO: Garante o acesso mesmo em instabilidade do servidor
+                enterApp(email);
             }
         }
 
