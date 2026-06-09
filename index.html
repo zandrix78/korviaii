@@ -12,6 +12,8 @@
                 extend: {
                     colors: {
                         'korvia-dark': '#020617',
+                        'primary-light': '#f9fafb',
+                        'secondary-dark': '#0f172a',
                     }
                 }
             }
@@ -25,15 +27,18 @@
         :root {
             --neon-blue: #00f2ff;
             --neon-purple: #9d00ff;
+            --bg-primary: #f9fafb;
+            --bg-secondary: #0f172a;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             scroll-behavior: smooth;
+            background-color: var(--bg-primary);
         }
 
         .dark body {
-            background-color: #020617;
+            background-color: var(--bg-secondary);
             color: #f8fafc;
         }
 
@@ -187,7 +192,7 @@
         </div>
 
         <!-- Hero Section -->
-        <section class="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden pt-20">
+        <section class="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden pt-20 bg-primary-light dark:bg-korvia-dark">
             <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] animate-glow"></div>
             <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[100px] animate-glow" style="animation-delay: 1.5s"></div>
             
@@ -262,7 +267,7 @@
         </section>
 
         <!-- SECTION: Marquee (Trusted By) -->
-        <section class="py-12 border-y border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-950/20 overflow-hidden">
+        <section class="py-12 border-y border-slate-100 dark:border-white/5 bg-slate-100 dark:bg-slate-950/20 overflow-hidden">
             <div class="marquee-track">
                 <!-- Repetir itens para o loop -->
                 <div class="flex items-center gap-20 px-10 grayscale opacity-50 dark:opacity-40 hover:opacity-100 transition-all cursor-default text-slate-600 dark:text-slate-400">
@@ -284,7 +289,7 @@
         </section>
 
         <!-- SECTION: Integrations Carousel -->
-        <section class="py-24 px-8 overflow-hidden bg-white dark:bg-[#020617]">
+        <section class="py-24 px-8 overflow-hidden bg-primary-light dark:bg-[#020617]">
             <div class="max-w-7xl mx-auto">
                 <div class="flex flex-col justify-between items-center mb-16 gap-6 reveal">
                     <div class="max-w-2xl text-center">
@@ -323,7 +328,7 @@
         </section>
 
         <!-- Features Section -->
-        <section id="features" class="py-24 px-8 bg-slate-50 dark:bg-slate-950/50">
+        <section id="features" class="py-24 px-8 bg-slate-100 dark:bg-slate-950/50">
             <div class="max-w-7xl mx-auto">
                 <div class="text-center space-y-4 mb-16">
                     <h2 class="text-3xl md:text-5xl font-bold">Tudo o que você precisa</h2>
@@ -350,7 +355,7 @@
         </section>
 
         <!-- How It Works Section -->
-        <section id="how-it-works" class="py-24 px-8">
+        <section id="how-it-works" class="py-24 px-8 bg-primary-light dark:bg-korvia-dark">
             <div class="max-w-7xl mx-auto">
                 <div class="text-center space-y-4 mb-16">
                     <h2 class="text-3xl md:text-5xl font-bold">Como Funciona</h2>
@@ -377,7 +382,7 @@
         </section>
 
         <!-- SECTION: Step-by-Step Configuration -->
-        <section id="configuration" class="py-24 px-8 bg-slate-900/30">
+        <section id="configuration" class="py-24 px-8 bg-secondary-dark/5 dark:bg-slate-900/30">
             <div class="max-w-7xl mx-auto">
                 <div class="text-center space-y-4 mb-16 reveal">
                     <h2 class="text-blue-400 font-bold uppercase tracking-[0.3em] text-xs mb-4">Guia de Sucesso</h2>
@@ -448,7 +453,7 @@
         </section>
 
         <!-- Testimonials Section -->
-        <section id="testimonials" class="py-24 px-8 bg-white dark:bg-korvia-dark">
+        <section id="testimonials" class="py-24 px-8 bg-primary-light dark:bg-korvia-dark">
             <div class="max-w-7xl mx-auto">
                 <div class="text-center space-y-4 mb-16 reveal">
                     <h2 class="text-3xl md:text-5xl font-bold">O que nossos clientes dizem</h2>
@@ -493,7 +498,7 @@
         </section>
 
         <!-- FAQ Section -->
-        <section id="faq" class="py-24 px-8 bg-slate-50 dark:bg-slate-950/50">
+        <section id="faq" class="py-24 px-8 bg-slate-100 dark:bg-slate-950/50">
             <div class="max-w-4xl mx-auto">
                 <div class="text-center space-y-4 mb-16 reveal">
                     <h2 class="text-3xl md:text-5xl font-bold">Perguntas Frequentes</h2>
@@ -529,7 +534,7 @@
         </section>
 
         <!-- SECTION: Final Call to Action & Quick Access -->
-        <section id="access-options" class="py-32 px-8 bg-gradient-to-b from-[#020617] to-blue-900/40 border-t border-white/5">
+        <section id="access-options" class="py-32 px-8 bg-gradient-to-b from-primary-light via-white to-blue-100/30 dark:from-[#020617] dark:to-blue-900/40 border-t border-slate-100 dark:border-white/5">
             <div class="max-w-5xl mx-auto text-center">
                 <div class="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 rounded-full text-blue-400 text-xs font-bold uppercase tracking-widest mb-8 reveal">
                     Acesso Imediato
