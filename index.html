@@ -668,6 +668,9 @@
                 <a href="#" id="nav-ai" onclick="switchTab('ai')" class="nav-link flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-slate-500 dark:text-slate-400">
                     <i data-lucide="bot" class="w-5 h-5"></i> Treinar IA
                 </a>
+                <a href="#" id="nav-settings" onclick="switchTab('settings')" class="nav-link flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-slate-500 dark:text-slate-400">
+                    <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+                </a>
                 <a href="#" id="nav-leads" onclick="switchTab('leads')" class="nav-link flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-slate-500 dark:text-slate-400">
                     <i data-lucide="users" class="w-5 h-5"></i> Leads
                 </a>
@@ -705,6 +708,10 @@
             <button onclick="switchTab('ai')" id="m-nav-ai" class="flex flex-col items-center gap-1 text-slate-500 transition-all">
                 <i data-lucide="bot" class="w-5 h-5"></i>
                 <span class="text-[8px] font-black uppercase tracking-widest">Treinar</span>
+            </button>
+            <button onclick="switchTab('settings')" id="m-nav-settings" class="flex flex-col items-center gap-1 text-slate-500 transition-all">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+                <span class="text-[8px] font-black uppercase tracking-widest">Config</span>
             </button>
             <button onclick="switchTab('leads')" id="m-nav-leads" class="flex flex-col items-center gap-1 text-slate-500 transition-all">
                 <i data-lucide="users" class="w-5 h-5"></i>
@@ -866,58 +873,74 @@
             <!-- Tab: AI Training -->
             <div id="tab-ai" class="tab-content hidden">
                 <header class="mb-6">
-                    <h1 class="text-2xl font-bold flex items-center gap-3">
-                        Cérebro da Korvia
-                        <span id="ai-status-led" class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse"></span>
+                    <h1 class="text-2xl font-bold flex items-center gap-3 text-slate-900 dark:text-white">
+                        Treinamento da IA
                     </h1>
-                    <p id="ai-status-banner-text" class="text-sm text-slate-500 mt-1 uppercase font-black tracking-tighter">Status: Não Configurado</p>
+                    <p class="text-slate-500 dark:text-slate-400">Ensine a IA sobre sua marca e como ela deve se comportar.</p>
                 </header>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="glass-card p-6 rounded-2xl">
                         <h3 class="text-lg font-semibold mb-4 text-blue-400 flex items-center gap-2">
-                            <i data-lucide="settings" class="w-5 h-5"></i> Configurações de Integração
-                        </h3>
-                        <div class="space-y-4 mb-6">
-                            <div>
-                                <label class="text-xs text-slate-400 mb-1.5 block">OpenAI API Key</label>
-                                <input type="password" id="openai-key" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="sk-...">
-                            </div>
-                            <div>
-                                <label class="text-xs text-slate-400 mb-1.5 block">Facebook App ID</label>
-                                <input type="text" id="fb-app-id" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="123456789...">
-                            </div>
-                            <div class="grid grid-cols-1 gap-4">
-                                <div>
-                                    <label class="text-xs text-slate-400 mb-1.5 block">Meta Page Access Token</label>
-                                    <input type="password" id="meta-token" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="EAAb...">
-                                </div>
-                                <div>
-                                    <label class="text-xs text-slate-400 mb-1.5 block">Instagram Business Account ID</label>
-                                    <input type="text" id="ig-business-id" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="1784...">
-                                </div>
-                            </div>
-                        </div>
-
-                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
                             <i data-lucide="book-open" class="w-5 h-5"></i> Contexto da Marca
                         </h3>
-                        <textarea id="brand-context" class="w-full h-48 bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="Ex: Somos uma agência de marketing focada em infoprodutores. Nosso tom de voz é amigável..."></textarea>
-                        <button onclick="saveSettings()" class="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition-all">Salvar Todas as Configurações</button>
+                        <p class="text-sm text-slate-500 mb-4">Descreva sua empresa, produtos e o tom de voz que a IA deve usar.</p>
+                        <textarea id="brand-context" class="w-full h-64 bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="Ex: Somos uma agência de marketing focada em infoprodutores. Nosso tom de voz é amigável..."></textarea>
+                        <button onclick="saveSettings()" class="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition-all">Salvar Treinamento</button>
                     </div>
                     <div class="space-y-6">
                         <div class="glass-card p-6 rounded-2xl border-l-4 border-cyan-500">
-                            <h3 class="font-semibold mb-2">Instruções de Resposta</h3>
-                            <p class="text-sm text-slate-400 mb-4">Defina como a IA deve se comportar ao ser questionada sobre preços.</p>
+                            <h3 class="font-semibold mb-2 text-slate-900 dark:text-white">Instruções de Resposta</h3>
+                            <p class="text-sm text-slate-400 mb-4">Regras específicas para a IA (ex: nunca falar de política, sempre pedir WhatsApp).</p>
                             <input type="text" id="ai-instructions" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 outline-none focus:border-cyan-500" value="Nunca dê o preço direto, peça o WhatsApp primeiro.">
                         </div>
                         <div class="glass-card p-6 rounded-2xl border-l-4 border-purple-500">
-                            <h3 class="font-semibold mb-2">Base de Conhecimento</h3>
+                            <h3 class="font-semibold mb-2 text-slate-900 dark:text-white">Base de Conhecimento</h3>
                             <div class="flex items-center justify-between p-3 bg-slate-900 rounded-lg border border-dashed border-slate-600 cursor-pointer hover:bg-slate-800 transition-all">
                                 <span class="text-sm text-slate-500">Upload PDF/Doc com informações do produto</span>
                                 <i data-lucide="upload" class="w-4 h-4 text-slate-500"></i>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Settings (Integrations) -->
+            <div id="tab-settings" class="tab-content hidden">
+                <header class="mb-6">
+                    <h1 class="text-2xl font-bold flex items-center gap-3 text-slate-900 dark:text-white">
+                        Configurações de API
+                        <span id="ai-status-led" class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse"></span>
+                    </h1>
+                    <p id="ai-status-banner-text" class="text-sm text-slate-500 mt-1 uppercase font-black tracking-tighter">Status: Não Configurado</p>
+                </header>
+                
+                <div class="max-w-2xl">
+                    <div class="glass-card p-8 rounded-[32px] space-y-6">
+                        <h3 class="text-xl font-bold text-blue-400 italic uppercase">Conexão Meta & OpenAI</h3>
+                        <p class="text-sm text-slate-500">Configure as chaves necessárias para que a Korvia AI possa ler e responder suas mensagens.</p>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-slate-400 mb-1.5 block font-bold uppercase tracking-wider">OpenAI API Key</label>
+                                <input type="password" id="openai-key" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:border-blue-500 outline-none" placeholder="sk-...">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400 mb-1.5 block font-bold uppercase tracking-wider">Facebook App ID</label>
+                                <input type="text" id="fb-app-id" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:border-blue-500 outline-none" placeholder="123456789...">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-slate-400 mb-1.5 block font-bold uppercase tracking-wider">Meta Page Access Token</label>
+                                    <input type="password" id="meta-token" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:border-blue-500 outline-none" placeholder="EAAb...">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-400 mb-1.5 block font-bold uppercase tracking-wider">IG Business ID</label>
+                                    <input type="text" id="ig-business-id" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:border-blue-500 outline-none" placeholder="1784...">
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-blue-600/20">Salvar Integrações</button>
                     </div>
                 </div>
             </div>
@@ -1492,7 +1515,7 @@
             document.getElementById('nav-' + tabId).classList.remove('text-slate-400');
 
             // Atualiza Bottom Nav no Mobile
-            const mobileItems = ['dashboard', 'builder', 'ai', 'leads', 'admin'];
+            const mobileItems = ['dashboard', 'builder', 'ai', 'settings', 'leads', 'admin'];
             mobileItems.forEach(item => {
                 const btn = document.getElementById('m-nav-' + item);
                 if (btn) {
@@ -2175,9 +2198,39 @@
             // Renderizar Notificações no Dashboard
             const notifArea = document.getElementById('dashboard-notifications');
             const notifications = JSON.parse(localStorage.getItem('korvia_notifications') || '[]');
-            if (notifications.length > 0) {
-                notifArea.innerHTML = notifications.map(n => `
-                    <div class="glass-card p-4 rounded-2xl border-blue-500/30 bg-blue-600/5 flex items-center gap-4 animate-[fadeInUp_0.5s_ease-out]">
+            const isConfigured = settings.openaiKey && settings.metaToken && settings.igBusinessId;
+            
+            let statusHtml = '';
+            if (!isConfigured) {
+                statusHtml = `
+                    <div class="glass-card p-4 rounded-2xl border-orange-500/30 bg-orange-600/5 flex items-center gap-4 animate-pulse mb-4">
+                        <div class="w-10 h-10 bg-orange-500/10 rounded-full flex items-center justify-center text-orange-400 shrink-0">
+                            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm text-slate-200 font-semibold">Configuração Pendente</p>
+                            <p class="text-xs text-slate-400">Sua IA está desativada. Configure as APIs para começar a responder automaticamente.</p>
+                        </div>
+                        <button onclick="switchTab('settings')" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap">Configurar</button>
+                    </div>
+                `;
+            } else if (settings.igConnected) {
+                statusHtml = `
+                    <div class="glass-card p-4 rounded-2xl border-green-500/30 bg-green-600/5 flex items-center gap-4 mb-4">
+                        <div class="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center text-green-400 shrink-0">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm text-slate-200 font-semibold">Sistema Ativo</p>
+                            <p class="text-xs text-slate-400">A Korvia AI está operando normalmente e monitorando sua conta.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (notifications.length > 0 || statusHtml) {
+                notifArea.innerHTML = statusHtml + notifications.map(n => `
+                    <div class="glass-card p-4 rounded-2xl border-blue-500/30 bg-blue-600/5 flex items-center gap-4 animate-[fadeInUp_0.5s_ease-out] mb-4">
                         <div class="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400 shrink-0">
                             <i data-lucide="megaphone" class="w-5 h-5"></i>
                         </div>
