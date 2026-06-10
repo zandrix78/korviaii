@@ -21,6 +21,7 @@
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script async defer crossorigin="anonymous" src="https://connect.facebook.net/pt_BR/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         
@@ -751,6 +752,11 @@
                     </div>
                 </header>
 
+                <!-- Dashboard Banner -->
+                <div class="mb-10 rounded-2xl overflow-hidden shadow-lg border border-slate-100 dark:border-white/5 animate-[fadeInUp_0.5s_ease-out]">
+                    <img src="https://i.imgur.com/gCbreYw.png" alt="Korvia Banner" class="w-full h-auto object-cover">
+                </div>
+
                 <!-- Global Notifications Area -->
                 <div id="dashboard-notifications" class="hidden space-y-4 mb-10"></div>
 
@@ -917,9 +923,7 @@
                 
                 <div class="max-w-2xl">
                     <div class="glass-card p-8 rounded-[32px] space-y-6">
-                        <h3 class="text-xl font-bold text-blue-400 italic uppercase">Conexão Meta & OpenAI</h3>
-                        <p class="text-sm text-slate-500">Configure as chaves necessárias para que a Korvia AI possa ler e responder suas mensagens.</p>
-                        
+                        <h3 class="text-xl font-bold text-blue-400 italic uppercase">Tokens e APIs</h3>
                         <div class="space-y-4">
                             <div>
                                 <label class="text-xs text-slate-400 mb-1.5 block font-bold uppercase tracking-wider">OpenAI API Key</label>
@@ -931,7 +935,7 @@
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="text-xs text-slate-400 mb-1.5 block font-bold uppercase tracking-wider">Meta Page Access Token</label>
+                                    <label class="text-xs text-slate-400 mb-1.5 block font-bold uppercase tracking-wider">Meta Access Token</label>
                                     <input type="password" id="meta-token" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:border-blue-500 outline-none" placeholder="EAAb...">
                                 </div>
                                 <div>
@@ -940,7 +944,7 @@
                                 </div>
                             </div>
                         </div>
-                        <button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-blue-600/20">Salvar Integrações</button>
+                        <button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-blue-600/20">Salvar Credenciais</button>
                     </div>
                 </div>
             </div>
@@ -1099,6 +1103,15 @@
         // Seu servidor no Render (Plano Gratuito)
         const API_URL = "https://korviaii.onrender.com"; 
 
+        // INTEGRAÇÃO SUPABASE (Login Gratuito e Rápido - Sem atrasos)
+        // Crie uma conta em supabase.com, crie um projeto e cole as chaves abaixo:
+        const SUPABASE_URL = "https://CECU3z1Z3xC7gdouuz3UGg.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_CECU3z1Z3xC7gdouuz3UGg__vpH0Jk7";
+        let supabaseClient = null;
+        if (typeof supabase !== 'undefined') {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
         // LÓGICA DE ACESSO
         let authMode = 'login'; // 'login' or 'signup'
 
@@ -1158,32 +1171,57 @@
             if (!email || !password) {
                 return alert("Por favor, preencha todos os campos.");
             }
+
+            // Caso especial: Conta Demo
+            if (email === "demo@korvia.ai") return loginDemo();
+
+            const isSignup = authMode === 'signup';
+            const btn = document.getElementById('auth-btn');
+            const originalText = btn.innerText;
             
-            // CORREÇÃO MOBILE: Limpa totalmente os dados da Demo ao entrar em uma conta real
-            const lastUser = localStorage.getItem('korvia_loggedInUser');
-            if (lastUser !== email) {
-                const keys = Object.keys(localStorage);
-                keys.forEach(key => {
-                    if (key.startsWith('korvia_')) localStorage.removeItem(key);
-                });
+            // Feedback visual de carregamento
+            btn.innerText = 'Processando...';
+            btn.disabled = true;
+
+            if (!supabaseClient || SUPABASE_URL.includes("SEU-PROJETO") || !SUPABASE_ANON_KEY.startsWith("sb_")) {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                return alert("⚠️ Configuração de Login Necessária:\n\nPara usar o login real e seguro, você precisa criar um projeto gratuito no Supabase e colar a URL e a API Key no topo do código.");
             }
 
             try {
-                // Tenta o servidor mas não trava se ele der erro
-                if (API_URL) {
-                    fetch(`${API_URL}${authMode === 'signup' ? '/api/signup' : '/api/login'}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
-                    }).catch(() => console.log("Servidor offline, usando modo local..."));
+                let result;
+                if (isSignup) {
+                    result = await supabaseClient.auth.signUp({ email, password });
+                    if (result.data?.user) alert("Conta criada! Verifique seu e-mail para confirmar (se habilitado no Supabase).");
+                } else {
+                    result = await supabaseClient.auth.signInWithPassword({ email, password });
                 }
-                
-                // Login imediato para não dar erro
-                localStorage.setItem('korvia_loggedInUser', email);
-                enterApp(email); 
-            } catch (e) {
-                localStorage.setItem('korvia_loggedInUser', email);
-                enterApp(email);
+
+                if (result.error) throw result.error;
+
+                // LIMPEZA DE SEGURANÇA:
+                // Se o usuário logado for diferente do anterior (ou se era a Demo), 
+                // limpamos o lixo local para as estatísticas e automações começarem do zero.
+                const lastUser = localStorage.getItem('korvia_loggedInUser');
+                if (lastUser && lastUser !== email) {
+                    Object.keys(localStorage).forEach(key => {
+                        if (key.startsWith('korvia_')) {
+                            localStorage.removeItem(key);
+                        }
+                    });
+                }
+
+                if (result.data?.user) {
+                    localStorage.setItem('korvia_loggedInUser', email);
+                    enterApp(email);
+                }
+            } catch (err) {
+                console.error("Auth Error:", err);
+                alert("Erro na Autenticação: " + (err.message || "Tente novamente."));
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         }
 
@@ -1255,6 +1293,7 @@
             ];
             
             localStorage.setItem('korvia_leads', JSON.stringify(demoLeads));
+            localStorage.setItem('korvia_automations', JSON.stringify([])); // Garante que automações demo comecem vazias
             localStorage.setItem('korvia_settings', JSON.stringify(demoSettings));
             localStorage.setItem('korvia_published_keyword', "QUERO");
             localStorage.setItem('korvia_users', JSON.stringify(demoUsers));
@@ -1472,6 +1511,17 @@
                 };
                 automations.unshift(newAuto);
                 KorviaDB.saveAutomations(automations);
+
+                // Sincroniza com o servidor para aparecer em outros dispositivos
+                const userEmail = localStorage.getItem('korvia_loggedInUser');
+                if (API_URL && userEmail && userEmail !== "demo@korvia.ai") {
+                    fetch(`${API_URL}/api/automations`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-user-email': userEmail },
+                        body: JSON.stringify(newAuto)
+                    }).catch(e => console.warn("Sync failed (Offline)"));
+                }
+
                 return newAuto.id;
             },
             updateAutomation: (id, updates) => {
@@ -1480,6 +1530,16 @@
                 if (idx !== -1) {
                     list[idx] = { ...list[idx], ...updates };
                     KorviaDB.saveAutomations(list);
+
+                    // Sincroniza a atualização com o servidor
+                    const userEmail = localStorage.getItem('korvia_loggedInUser');
+                    if (API_URL && userEmail && userEmail !== "demo@korvia.ai") {
+                        fetch(`${API_URL}/api/automations/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'x-user-email': userEmail },
+                            body: JSON.stringify(list[idx])
+                        }).catch(e => console.warn("Sync failed (Offline)"));
+                    }
                 }
             },
             deleteAutomation: (id) => {
@@ -1488,6 +1548,15 @@
                 KorviaDB.saveAutomations(filtered);
                 if (currentAutomationId === id) {
                     currentAutomationId = null;
+                }
+
+                // Remove do servidor também
+                const userEmail = localStorage.getItem('korvia_loggedInUser');
+                if (API_URL && userEmail && userEmail !== "demo@korvia.ai") {
+                    fetch(`${API_URL}/api/automations/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'x-user-email': userEmail }
+                    }).catch(e => console.warn("Sync failed (Offline)"));
                 }
             }
         };
@@ -2284,6 +2353,9 @@
             initTypingHero();
             renderLandingFAQ();
             updateLandingAuthButtons();
+            
+            const loggedInUser = localStorage.getItem('korvia_loggedInUser');
+            if (loggedInUser) enterApp(loggedInUser);
 
             if (loggedInUser && loggedInUser !== "demo@korvia.ai") {
                 // Sincronização em "tempo real" (Busca dados a cada 10 segundos)
